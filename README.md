@@ -1,146 +1,96 @@
-# Quality Services Platform - Monorepo
+# Quality Services Platform
 
-Enterprise full-stack monorepo for the **Quality Services Platform**, orchestrated with **Turborepo** and **pnpm workspaces**.
-
-## Architecture & Structure Overview
-
-```text
-quality-service-app/
-├── apps/
-│   ├── web/                     # Frontend: React 18 + Vite + TypeScript + Tailwind CSS + daisyUI + React Router
-│   │   ├── src/
-│   │   │   ├── components/      # Reusable UI elements (Navbar, Footer, badges)
-│   │   │   ├── features/        # Feature domains (e.g., services/ components, state)
-│   │   │   ├── hooks/           # Custom React hooks (e.g., useServices)
-│   │   │   ├── lib/             # API client and Supabase client abstractions
-│   │   │   ├── routes/          # Client-side router, HomePage, and NotFoundPage
-│   │   │   ├── App.tsx          # Main application layout and routes shell
-│   │   │   ├── main.tsx         # React DOM entrypoint
-│   │   │   └── index.css        # Tailwind directives and base styles
-│   │   ├── vite.config.ts       # Vite bundler configuration with @ path alias & proxy
-│   │   └── tailwind.config.js   # Extends shared preset from @quality-services/config
-│   │
-│   └── api/                     # Backend: NestJS 11 + TypeScript + @nestjs/config
-│       ├── src/
-│       │   ├── common/          # Cross-cutting filters, guards, interceptors, pipes
-│       │   ├── modules/         # Modular feature domain structure
-│       │   │   ├── health/      # Health check controller and service
-│       │   │   └── services/    # Quality services controller, service, module, and DTOs
-│       │   ├── supabase/        # Injected SupabaseService and SupabaseModule
-│       │   ├── app.module.ts    # Root application module with ConfigModule
-│       │   └── main.ts          # Bootstrap entrypoint with CORS, prefix, and filters
-│       └── nest-cli.json
-│
-├── packages/
-│   ├── types/                   # @quality-services/types: shared types, DTOs, API models
-│   ├── config/                  # @quality-services/config: shared Tailwind preset & ESLint rules
-│   └── utils/                   # @quality-services/utils: shared formatters, constants, helpers
-│
-├── supabase/
-│   ├── config.toml              # Supabase CLI local development configuration
-│   ├── docker-compose.yml       # Local Supabase Docker stack (PostgreSQL, REST API, Studio UI)
-│   └── migrations/              # SQL migrations with Row Level Security (RLS) enabled
-│
-├── pnpm-workspace.yaml          # Workspace catalog definition
-├── turbo.json                   # Turborepo task pipeline orchestration (dev, build, lint, test)
-├── tsconfig.base.json           # Strict base TypeScript compiler options
-├── .env.example                 # Root environment template
-└── git-workflow.md              # Mandatory branch & PR workflow rules
-```
-
-### Architectural Reasoning
-1. **Separation of Concerns**: `apps/web` is isolated from `apps/api`, communicating strictly over REST endpoints with shared contract types defined in `packages/types`.
-2. **Shared Contracts (`packages/types`)**: Both client and server import the exact same data contracts (`ApiResponse`, `QualityService`, `CreateServiceDto`), eliminating schema drift.
-3. **Shared Design Tokens (`packages/config`)**: The Tailwind preset and daisyUI theme are centralized, ensuring consistent branding and typography across web apps.
-4. **Local Supabase with Docker**: Database migrations and schemas are tracked in version control, running locally with full Row Level Security (RLS) policies.
+Full-stack application monorepo powered by **Turborepo**, **pnpm workspaces**, **NestJS**, **React (Vite)**, and **Supabase (PostgreSQL)**.
 
 ---
 
 ## Prerequisites
 
-- **Node.js**: >= 20.0.0 (Node 24 recommended)
+- **Node.js**: >= 20.0.0
 - **pnpm**: >= 9.0.0 (`npm install -g pnpm`)
-- **Docker & Docker Compose**: For local database and Supabase services
+- **Docker & Docker Compose**: For local PostgreSQL database and Supabase services
 
 ---
 
-## Getting Started
+## Quick Start (Setup & Run)
 
 ### 1. Install Dependencies
-Run pnpm at the root of the monorepo:
 ```bash
 pnpm install
 ```
 
 ### 2. Configure Environment Variables
-Copy the root `.env.example` file:
+Copy the environment template files:
 ```bash
 cp .env.example .env
 cp apps/web/.env.example apps/web/.env
 cp apps/api/.env.example apps/api/.env
 ```
 
-### 3. Start Local Supabase (Docker)
-Start the local PostgreSQL, PostgREST, and Studio containers:
+### 3. Start Local Database (Docker)
+Launch PostgreSQL (port `54322`), PostgREST API (port `54321`), and Supabase Studio (port `54323`):
 ```bash
 docker compose -f supabase/docker-compose.yml up -d
 ```
-- **Postgres Database**: `localhost:54322`
-- **PostgREST API**: `http://localhost:54321`
-- **Supabase Studio UI**: `http://localhost:54323`
+> Database schema and migrations (`tbrand`, `tuser`, `tbrand_user`, `treply`, `tevaluation`) are applied automatically on startup.
 
-To shut down the local Supabase containers:
-```bash
-docker compose -f supabase/docker-compose.yml down
-```
-
----
-
-## Development Mode
-
-Run both the frontend and backend applications concurrently via Turborepo:
+### 4. Run Development Servers
+Start both the Frontend and Backend concurrently via Turborepo:
 ```bash
 pnpm dev
 ```
-Turborepo orchestrates parallel processes:
-- **Web (Frontend)**: [http://localhost:5173](http://localhost:5173)
-- **API (Backend)**: [http://localhost:3001/api/v1](http://localhost:3001/api/v1)
-- **API Health Check**: [http://localhost:3001/api/v1/health](http://localhost:3001/api/v1/health)
-
-To run an individual application:
-```bash
-# Run only frontend
-pnpm --filter @quality-services/web dev
-
-# Run only backend
-pnpm --filter @quality-services/api dev
-```
 
 ---
 
-## Building the Project
+## Application Access Points
 
-Build all packages and applications with caching:
-```bash
-pnpm build
-```
-
-This compiles:
-1. `packages/types` via `tsup`
-2. `packages/utils` via `tsup`
-3. `apps/api` via NestJS CLI
-4. `apps/web` via Vite + TypeScript compiler
+| Service | URL | Notes |
+| :--- | :--- | :--- |
+| **Web Frontend** | [http://localhost:5173](http://localhost:5173) | React + Vite + Tailwind + daisyUI |
+| **Backend REST API** | [http://localhost:3001/api/v1](http://localhost:3001/api/v1) | NestJS modular API |
+| **Health Check** | [http://localhost:3001/api/v1/health](http://localhost:3001/api/v1/health) | API status & uptime |
+| **Supabase Studio UI** | [http://localhost:54323](http://localhost:54323) | Database table editor & SQL runner |
+| **PostgreSQL Database** | `localhost:54322` | User: `postgres`, Password: `postgrespassword` |
 
 ---
 
-## Linting & Type Checking
+## Available REST API Endpoints
 
-To typecheck and lint the entire monorepo:
-```bash
-pnpm lint
-```
+All endpoints are prefixed with `/api/v1/`:
 
-To clean all build artifacts and caches:
-```bash
-pnpm clean
+- `POST|GET /api/v1/brands` - Brands management (`tbrand`)
+- `POST|GET /api/v1/users` - Users management (`tuser`)
+- `POST|GET /api/v1/brand-users` - Brand to User assignments (`tbrand_user`)
+- `POST|GET /api/v1/replies` - Customer service replies (`treply`)
+- `POST|GET /api/v1/evaluations` - QA evaluations (`tevaluation`)
+- `GET /api/v1/health` - API health check
+
+---
+
+## Monorepo Commands
+
+| Command | Description |
+| :--- | :--- |
+| `pnpm dev` | Runs both frontend and backend concurrently in watch mode |
+| `pnpm build` | Compiles all shared packages and applications with caching |
+| `pnpm lint` | Runs TypeScript type checking across all workspace packages |
+| `pnpm clean` | Cleans all build artifacts and dist folders |
+| `docker compose -f supabase/docker-compose.yml down` | Stops the local Supabase Docker containers |
+
+---
+
+## Project Structure
+
+```text
+├── apps/
+│   ├── web/          # React + Vite frontend application
+│   └── api/          # NestJS backend REST API
+├── packages/
+│   ├── types/        # Shared TypeScript interfaces & DTO contracts
+│   ├── config/       # Shared Tailwind preset & ESLint configurations
+│   └── utils/        # Shared helper functions & formatters
+├── supabase/
+│   ├── docker-compose.yml # Local database & Supabase services stack
+│   └── migrations/        # SQL schema migrations with RLS enabled
+└── pnpm-workspace.yaml
 ```

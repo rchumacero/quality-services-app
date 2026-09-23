@@ -39,7 +39,7 @@ services:
 
   # Supabase Studio UI
   supabase-studio:
-    image: supabase/studio:20240101-8e05cb4
+    image: supabase/studio:latest
     container_name: quality-supabase-studio
     restart: unless-stopped
     ports:
