@@ -10,7 +10,7 @@ import { EvaluationModel } from '@quality-services/types';
 import { ReplyEntity } from '../../reply/entities/reply.entity';
 import { UserEntity } from '../../user/entities/user.entity';
 
-@Entity({ name: 't_evaluation' })
+@Entity({ name: 'tevaluation' })
 export class EvaluationEntity extends BaseAuditEntity implements EvaluationModel {
   @PrimaryGeneratedColumn('uuid')
   id!: string;

@@ -10,7 +10,7 @@ import { BrandUserEntity } from '../../brand-user/entities/brand-user.entity';
 import { ReplyEntity } from '../../reply/entities/reply.entity';
 import { EvaluationEntity } from '../../evaluation/entities/evaluation.entity';
 
-@Entity({ name: 't_user' })
+@Entity({ name: 'tuser' })
 export class UserEntity extends BaseAuditEntity implements UserModel {
   @PrimaryGeneratedColumn('uuid')
   id!: string;

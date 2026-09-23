@@ -9,7 +9,7 @@ import { BrandModel } from '@quality-services/types';
 import { BrandUserEntity } from '../../brand-user/entities/brand-user.entity';
 import { ReplyEntity } from '../../reply/entities/reply.entity';
 
-@Entity({ name: 't_brand' })
+@Entity({ name: 'tbrand' })
 export class BrandEntity extends BaseAuditEntity implements BrandModel {
   @PrimaryGeneratedColumn('uuid')
   id!: string;

@@ -11,7 +11,7 @@ import { BrandUserModel } from '@quality-services/types';
 import { BrandEntity } from '../../brand/entities/brand.entity';
 import { UserEntity } from '../../user/entities/user.entity';
 
-@Entity({ name: 't_brand_user' })
+@Entity({ name: 'tbrand_user' })
 @Unique(['brandId', 'userId'])
 export class BrandUserEntity extends BaseAuditEntity implements BrandUserModel {
   @PrimaryGeneratedColumn('uuid')
