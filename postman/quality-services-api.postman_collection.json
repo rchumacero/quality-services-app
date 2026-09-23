@@ -53,6 +53,36 @@
       "value": "svc-001",
       "type": "string",
       "description": "Sample Quality Service ID"
+    },
+    {
+      "key": "juanId",
+      "value": "aaaaaaaa-1111-0000-0000-000000000001",
+      "type": "string",
+      "description": "Specialist: Juan (IBM, NVIDIA)"
+    },
+    {
+      "key": "carlaId",
+      "value": "aaaaaaaa-2222-0000-0000-000000000002",
+      "type": "string",
+      "description": "Specialist: Carla (NVIDIA, APPLE)"
+    },
+    {
+      "key": "miguelId",
+      "value": "aaaaaaaa-3333-0000-0000-000000000003",
+      "type": "string",
+      "description": "Team Lead: Miguel (IBM, APPLE)"
+    },
+    {
+      "key": "lorenaId",
+      "value": "aaaaaaaa-4444-0000-0000-000000000004",
+      "type": "string",
+      "description": "Team Lead: Lorena (NVIDIA)"
+    },
+    {
+      "key": "currentTestUserId",
+      "value": "aaaaaaaa-1111-0000-0000-000000000001",
+      "type": "string",
+      "description": "Active user UUID sent in x-user-id header for RLS"
     }
   ],
   "item": [
@@ -71,8 +101,12 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/health",
-              "host": ["{{baseUrl}}"],
-              "path": ["health"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
             },
             "description": "Check API status and uptime."
           },
@@ -95,8 +129,12 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/brands?page=1&limit=10&status=active",
-              "host": ["{{baseUrl}}"],
-              "path": ["brands"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "brands"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -133,8 +171,13 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/brands/{{brandId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["brands", "{{brandId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "brands",
+                "{{brandId}}"
+              ]
             },
             "description": "Retrieve brand details including related brand users and replies."
           },
@@ -176,8 +219,12 @@
             },
             "url": {
               "raw": "{{baseUrl}}/brands",
-              "host": ["{{baseUrl}}"],
-              "path": ["brands"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "brands"
+              ]
             },
             "description": "Create a new brand entity."
           },
@@ -203,8 +250,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}/brands/{{brandId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["brands", "{{brandId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "brands",
+                "{{brandId}}"
+              ]
             },
             "description": "Update specific fields of an existing brand."
           },
@@ -222,8 +274,13 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/brands/{{brandId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["brands", "{{brandId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "brands",
+                "{{brandId}}"
+              ]
             },
             "description": "Delete brand by ID."
           },
@@ -246,8 +303,12 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/users?page=1&limit=10&status=active",
-              "host": ["{{baseUrl}}"],
-              "path": ["users"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -284,8 +345,13 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/users/{{userId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["users", "{{userId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}"
+              ]
             },
             "description": "Retrieve user details including brand assignments, specialist replies, and team lead evaluations."
           },
@@ -327,8 +393,12 @@
             },
             "url": {
               "raw": "{{baseUrl}}/users",
-              "host": ["{{baseUrl}}"],
-              "path": ["users"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ]
             },
             "description": "Create a new user account."
           },
@@ -354,8 +424,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}/users/{{userId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["users", "{{userId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}"
+              ]
             },
             "description": "Update user details."
           },
@@ -373,8 +448,13 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/users/{{userId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["users", "{{userId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}"
+              ]
             },
             "description": "Delete user by ID."
           },
@@ -397,8 +477,12 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/brand-users?brandId={{brandId}}&page=1&limit=10",
-              "host": ["{{baseUrl}}"],
-              "path": ["brand-users"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "brand-users"
+              ],
               "query": [
                 {
                   "key": "brandId",
@@ -459,8 +543,12 @@
             },
             "url": {
               "raw": "{{baseUrl}}/brand-users",
-              "host": ["{{baseUrl}}"],
-              "path": ["brand-users"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "brand-users"
+              ]
             },
             "description": "Create a mapping assignment between a brand and a user."
           },
@@ -478,8 +566,13 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/brand-users/{{brandUserId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["brand-users", "{{brandUserId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "brand-users",
+                "{{brandUserId}}"
+              ]
             },
             "description": "Get assignment details with Brand and User relations."
           },
@@ -505,8 +598,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}/brand-users/{{brandUserId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["brand-users", "{{brandUserId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "brand-users",
+                "{{brandUserId}}"
+              ]
             },
             "description": "Update assignment status."
           },
@@ -524,8 +622,13 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/brand-users/{{brandUserId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["brand-users", "{{brandUserId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "brand-users",
+                "{{brandUserId}}"
+              ]
             },
             "description": "Remove user assignment from brand."
           },
@@ -544,12 +647,21 @@
               {
                 "key": "Accept",
                 "value": "application/json"
+              },
+              {
+                "key": "x-user-id",
+                "value": "{{currentTestUserId}}",
+                "description": "User UUID for RLS testing (juanId, carlaId, miguelId, lorenaId)"
               }
             ],
             "url": {
               "raw": "{{baseUrl}}/replies?page=1&limit=10",
-              "host": ["{{baseUrl}}"],
-              "path": ["replies"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "replies"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -603,6 +715,11 @@
               {
                 "key": "Accept",
                 "value": "application/json"
+              },
+              {
+                "key": "x-user-id",
+                "value": "{{currentTestUserId}}",
+                "description": "User UUID for RLS testing (juanId, carlaId, miguelId, lorenaId)"
               }
             ],
             "body": {
@@ -611,8 +728,12 @@
             },
             "url": {
               "raw": "{{baseUrl}}/replies",
-              "host": ["{{baseUrl}}"],
-              "path": ["replies"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "replies"
+              ]
             },
             "description": "Create a new customer service reply entry."
           },
@@ -626,12 +747,22 @@
               {
                 "key": "Accept",
                 "value": "application/json"
+              },
+              {
+                "key": "x-user-id",
+                "value": "{{currentTestUserId}}",
+                "description": "User UUID for RLS testing (juanId, carlaId, miguelId, lorenaId)"
               }
             ],
             "url": {
               "raw": "{{baseUrl}}/replies/{{replyId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["replies", "{{replyId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "replies",
+                "{{replyId}}"
+              ]
             },
             "description": "Get detailed reply information including brand, specialist, and QA evaluations."
           },
@@ -649,6 +780,11 @@
               {
                 "key": "Accept",
                 "value": "application/json"
+              },
+              {
+                "key": "x-user-id",
+                "value": "{{currentTestUserId}}",
+                "description": "User UUID for RLS testing (juanId, carlaId, miguelId, lorenaId)"
               }
             ],
             "body": {
@@ -657,8 +793,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}/replies/{{replyId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["replies", "{{replyId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "replies",
+                "{{replyId}}"
+              ]
             },
             "description": "Update reply content."
           },
@@ -672,12 +813,22 @@
               {
                 "key": "Accept",
                 "value": "application/json"
+              },
+              {
+                "key": "x-user-id",
+                "value": "{{currentTestUserId}}",
+                "description": "User UUID for RLS testing (juanId, carlaId, miguelId, lorenaId)"
               }
             ],
             "url": {
               "raw": "{{baseUrl}}/replies/{{replyId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["replies", "{{replyId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "replies",
+                "{{replyId}}"
+              ]
             },
             "description": "Delete reply entry."
           },
@@ -696,12 +847,21 @@
               {
                 "key": "Accept",
                 "value": "application/json"
+              },
+              {
+                "key": "x-user-id",
+                "value": "{{currentTestUserId}}",
+                "description": "User UUID for RLS testing (juanId, carlaId, miguelId, lorenaId)"
               }
             ],
             "url": {
               "raw": "{{baseUrl}}/evaluations?page=1&limit=10",
-              "host": ["{{baseUrl}}"],
-              "path": ["evaluations"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "evaluations"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -755,6 +915,11 @@
               {
                 "key": "Accept",
                 "value": "application/json"
+              },
+              {
+                "key": "x-user-id",
+                "value": "{{currentTestUserId}}",
+                "description": "User UUID for RLS testing (juanId, carlaId, miguelId, lorenaId)"
               }
             ],
             "body": {
@@ -763,8 +928,12 @@
             },
             "url": {
               "raw": "{{baseUrl}}/evaluations",
-              "host": ["{{baseUrl}}"],
-              "path": ["evaluations"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "evaluations"
+              ]
             },
             "description": "Create a QA score evaluation for a reply."
           },
@@ -778,12 +947,22 @@
               {
                 "key": "Accept",
                 "value": "application/json"
+              },
+              {
+                "key": "x-user-id",
+                "value": "{{currentTestUserId}}",
+                "description": "User UUID for RLS testing (juanId, carlaId, miguelId, lorenaId)"
               }
             ],
             "url": {
               "raw": "{{baseUrl}}/evaluations/{{evaluationId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["evaluations", "{{evaluationId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "evaluations",
+                "{{evaluationId}}"
+              ]
             },
             "description": "Get evaluation details with reply, brand, specialist, and team lead."
           },
@@ -801,6 +980,11 @@
               {
                 "key": "Accept",
                 "value": "application/json"
+              },
+              {
+                "key": "x-user-id",
+                "value": "{{currentTestUserId}}",
+                "description": "User UUID for RLS testing (juanId, carlaId, miguelId, lorenaId)"
               }
             ],
             "body": {
@@ -809,8 +993,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}/evaluations/{{evaluationId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["evaluations", "{{evaluationId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "evaluations",
+                "{{evaluationId}}"
+              ]
             },
             "description": "Update score or feedback on an evaluation."
           },
@@ -824,12 +1013,22 @@
               {
                 "key": "Accept",
                 "value": "application/json"
+              },
+              {
+                "key": "x-user-id",
+                "value": "{{currentTestUserId}}",
+                "description": "User UUID for RLS testing (juanId, carlaId, miguelId, lorenaId)"
               }
             ],
             "url": {
               "raw": "{{baseUrl}}/evaluations/{{evaluationId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["evaluations", "{{evaluationId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "evaluations",
+                "{{evaluationId}}"
+              ]
             },
             "description": "Delete evaluation entry."
           },
@@ -852,8 +1051,12 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/services?category=audit",
-              "host": ["{{baseUrl}}"],
-              "path": ["services"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "services"
+              ],
               "query": [
                 {
                   "key": "category",
@@ -887,8 +1090,13 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/services/{{serviceId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["services", "{{serviceId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "services",
+                "{{serviceId}}"
+              ]
             },
             "description": "Get service details by ID."
           },
@@ -914,8 +1122,12 @@
             },
             "url": {
               "raw": "{{baseUrl}}/services",
-              "host": ["{{baseUrl}}"],
-              "path": ["services"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "services"
+              ]
             },
             "description": "Create a new standardized quality service."
           },
@@ -941,8 +1153,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}/services/{{serviceId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["services", "{{serviceId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "services",
+                "{{serviceId}}"
+              ]
             },
             "description": "Update service pricing or SLA."
           },
@@ -960,8 +1177,13 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/services/{{serviceId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["services", "{{serviceId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "services",
+                "{{serviceId}}"
+              ]
             },
             "description": "Delete service entry."
           },
