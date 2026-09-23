@@ -1,0 +1,36 @@
+{
+  "name": "@quality-services/api",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "nest build",
+    "dev": "nest start --watch",
+    "start": "node dist/main",
+    "start:debug": "nest start --debug --watch",
+    "lint": "tsc --noEmit",
+    "test": "echo \"No tests specified for api yet\"",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.0.9",
+    "@nestjs/config": "^4.0.0",
+    "@nestjs/core": "^11.0.9",
+    "@nestjs/platform-express": "^11.0.9",
+    "@quality-services/types": "workspace:*",
+    "@quality-services/utils": "workspace:*",
+    "@supabase/supabase-js": "^2.49.1",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.1",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^11.0.4",
+    "@nestjs/schematics": "^11.0.1",
+    "@nestjs/testing": "^11.0.9",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.13.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.3"
+  }
+}
