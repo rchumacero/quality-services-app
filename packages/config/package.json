@@ -1,0 +1,23 @@
+{
+  "name": "@quality-services/config",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js",
+    "./tailwind": "./tailwind.preset.js",
+    "./eslint": "./eslint.base.js"
+  },
+  "scripts": {
+    "lint": "echo \"No linting needed for config\"",
+    "test": "echo \"No tests for config\""
+  },
+  "peerDependencies": {
+    "daisyui": "^4.12.0",
+    "tailwindcss": "^3.4.0"
+  },
+  "devDependencies": {
+    "daisyui": "^4.12.23",
+    "tailwindcss": "^3.4.17"
+  }
+}

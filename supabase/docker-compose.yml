@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  # Supabase PostgreSQL Database
+  supabase-db:
+    image: supabase/postgres:15.1.1.78
+    container_name: quality-supabase-db
+    restart: unless-stopped
+    ports:
+      - '54322:5432'
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+    volumes:
+      - ./migrations:/docker-entrypoint-initdb.d:ro
+      - supabase_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # PostgREST - Instant REST API from Postgres
+  supabase-rest:
+    image: postgrest/postgrest:v12.0.2
+    container_name: quality-supabase-rest
+    restart: unless-stopped
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+    ports:
+      - '54321:3000'
+    environment:
+      PGRST_DB_URI: postgres://postgres:postgrespassword@supabase-db:5432/postgres
+      PGRST_DB_SCHEMAS: public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: super-secret-jwt-token-with-at-least-32-characters
+
+  # Supabase Studio UI
+  supabase-studio:
+    image: supabase/studio:20240101-8e05cb4
+    container_name: quality-supabase-studio
+    restart: unless-stopped
+    ports:
+      - '54323:3000'
+    environment:
+      STUDIO_PG_META_URL: http://supabase-db:5432
+      POSTGRES_PASSWORD: postgrespassword
+      SUPABASE_URL: http://supabase-rest:3000
+
+volumes:
+  supabase_db_data:
