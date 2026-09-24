@@ -12,11 +12,12 @@ import {
   Search,
   ChevronDown,
   Bell,
+  UserCheck,
 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 
 export const DashboardLayout: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, switchUser, testUsers } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isAdminOpen, setIsAdminOpen] = useState(true);
@@ -149,14 +150,14 @@ export const DashboardLayout: React.FC = () => {
           <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100">
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-semibold text-xs shrink-0">
-                {user?.name?.charAt(0) || 'E'}
+                {user?.name?.charAt(0) || 'U'}
               </div>
               <div className="min-w-0">
                 <div className="text-xs font-bold text-slate-900 truncate">
-                  {user?.name || 'Elena R.'}
+                  {user?.name || 'User'}
                 </div>
                 <div className="text-[11px] text-slate-400 truncate">
-                  {user?.role || 'QA Ops Lead'}
+                  {user?.role === 'specialist' ? 'Specialist' : 'Team Lead'}
                 </div>
               </div>
             </div>
@@ -176,9 +177,9 @@ export const DashboardLayout: React.FC = () => {
       {/* Main Container */}
       <div className="flex-1 ml-64 flex flex-col min-w-0">
         {/* Top Navbar */}
-        <header className="h-16 bg-white border-b border-slate-200/80 px-6 flex items-center justify-between sticky top-0 z-20">
-          {/* Search bar */}
-          <div className="w-full max-w-md relative">
+        <header className="h-16 bg-white border-b border-slate-200/80 px-6 flex items-center justify-between sticky top-0 z-20 gap-4">
+          {/* Left: Search bar */}
+          <div className="w-64 lg:w-72 relative shrink-0">
             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
               <Search className="w-4 h-4" />
             </div>
@@ -186,8 +187,8 @@ export const DashboardLayout: React.FC = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search evaluations, tickets, or brands... (Ctrl+K)"
-              className="w-full pl-9 pr-12 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition"
+              placeholder="Search (Ctrl+K)"
+              className="w-full pl-9 pr-12 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition"
             />
             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
               <kbd className="px-1.5 py-0.5 text-[10px] font-semibold text-slate-500 bg-slate-200/70 border border-slate-300 rounded">
@@ -196,10 +197,42 @@ export const DashboardLayout: React.FC = () => {
             </div>
           </div>
 
+          {/* Middle: User Selector for RLS Testing */}
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50/70 border border-blue-200 rounded-xl shadow-xs">
+            <div className="flex items-center gap-1.5 text-xs text-blue-900 font-semibold shrink-0">
+              <UserCheck className="w-4 h-4 text-blue-600" />
+              <span className="hidden sm:inline">Active User:</span>
+            </div>
+            <div className="relative">
+              <select
+                id="header-user-select"
+                value={user?.email || 'juan@qualityservice.com'}
+                onChange={(e) => switchUser(e.target.value)}
+                className="pl-2 pr-7 py-1 bg-white border border-blue-200 rounded-lg text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition appearance-none cursor-pointer"
+              >
+                {testUsers.map((u) => (
+                  <option key={u.id} value={u.email}>
+                    {u.email} ({u.name} • {u.role === 'specialist' ? 'Specialist' : 'Team Lead'})
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
+            <span
+              className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${
+                user?.role === 'specialist'
+                  ? 'bg-blue-100 text-blue-700'
+                  : 'bg-purple-100 text-purple-700'
+              }`}
+            >
+              {user?.role === 'specialist' ? 'Specialist' : 'Team Lead'}
+            </span>
+          </div>
+
           {/* Right Header Badges & Actions */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 shrink-0">
             {/* System Status Pill */}
-            <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/60 text-xs font-medium text-emerald-800">
+            <div className="hidden xl:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/60 text-xs font-medium text-emerald-800">
               <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
               <span>Active Systems</span>
             </div>
@@ -225,7 +258,7 @@ export const DashboardLayout: React.FC = () => {
 
             {/* Profile Avatar */}
             <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-semibold text-xs shadow-sm shadow-blue-500/20 cursor-pointer">
-              {user?.name?.charAt(0) || 'E'}
+              {user?.name?.charAt(0) || 'U'}
             </div>
           </div>
         </header>

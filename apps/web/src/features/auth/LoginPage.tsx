@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ShieldCheck, User, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { ShieldCheck, User, Lock, Eye, EyeOff, ArrowRight, ChevronDown } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 export const LoginPage: React.FC = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState('juan@qualityservice.com');
+  const [password, setPassword] = useState('password123');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
@@ -46,24 +46,30 @@ export const LoginPage: React.FC = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* User Field */}
+          {/* User Closed Dropdown Field */}
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1.5" htmlFor="user-input">
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5" htmlFor="user-select">
               User
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                 <User className="w-4 h-4" />
               </div>
-              <input
-                id="user-input"
-                type="text"
+              <select
+                id="user-select"
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="Enter your user"
-                className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition"
-              />
+                className="w-full pl-10 pr-9 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition appearance-none cursor-pointer"
+              >
+                <option value="juan@qualityservice.com">juan@qualityservice.com (Juan • Specialist)</option>
+                <option value="carla@qualityservice.com">carla@qualityservice.com (Carla • Specialist)</option>
+                <option value="miguel@qualityservice.com">miguel@qualityservice.com (Miguel • Team Lead)</option>
+                <option value="lorena@qualityservice.com">lorena@qualityservice.com (Lorena • Team Lead)</option>
+              </select>
+              <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-400">
+                <ChevronDown className="w-4 h-4" />
+              </div>
             </div>
           </div>
 
