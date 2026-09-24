@@ -34,6 +34,11 @@ export class ReplyController {
     return this.replyService.findAll(query, userId);
   }
 
+  @Get('created-by-options')
+  getCreatedByOptions(@CurrentUserId() userId?: string) {
+    return this.replyService.getCreatedByOptions(userId);
+  }
+
   @Get(':id')
   findOne(
     @Param('id', ParseUUIDPipe) id: string,
