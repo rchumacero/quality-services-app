@@ -34,6 +34,11 @@ export class EvaluationController {
     return this.evaluationService.findAll(query, userId);
   }
 
+  @Get('tag-error-options')
+  getTagErrorOptions(@CurrentUserId() userId?: string) {
+    return this.evaluationService.getTagErrorOptions(userId);
+  }
+
   @Get(':id')
   findOne(
     @Param('id', ParseUUIDPipe) id: string,

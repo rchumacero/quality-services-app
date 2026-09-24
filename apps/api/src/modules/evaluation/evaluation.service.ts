@@ -30,6 +30,29 @@ export class EvaluationService {
     await manager.query(`SELECT set_config('app.current_user_id', $1, true)`, [userId || '']);
   }
 
+  async getTagErrorOptions(userId?: string): Promise<string[]> {
+    return this.dataSource.transaction(async (manager) => {
+      await this.setRlsContext(manager, userId);
+      const results = await manager
+        .getRepository(EvaluationEntity)
+        .createQueryBuilder('eval')
+        .select('DISTINCT eval.errorTags', 'errorTags')
+        .where('eval.errorTags IS NOT NULL AND eval.errorTags != \'\'')
+        .getRawMany();
+
+      const existingTags = results.map((r) => r.errorTags).filter(Boolean);
+      const standardTags = [
+        'Grammar & Syntax',
+        'Tone Unsuitable',
+        'Impolite / Harsh',
+        'Protocol Deviation',
+        'Excessive Verbosity',
+        'Condescending Tone',
+      ];
+      return Array.from(new Set([...standardTags, ...existingTags]));
+    });
+  }
+
   async create(dto: CreateEvaluationDto, userId?: string): Promise<EvaluationEntity> {
     return this.dataSource.transaction(async (manager) => {
       await this.setRlsContext(manager, userId);

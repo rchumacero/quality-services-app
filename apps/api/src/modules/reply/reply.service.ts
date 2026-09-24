@@ -23,6 +23,12 @@ export class ReplyFilterQueryDto extends PaginationQueryDto {
   createdBy?: string;
 
   @IsOptional()
+  tagErrors?: string | string[];
+
+  @IsOptional()
+  tagError?: string;
+
+  @IsOptional()
   @IsUUID()
   specialistId?: string;
 }
@@ -101,6 +107,7 @@ export class ReplyService {
 
     const brandIds = parseMultiSelect(query.brandIds || query.brandId);
     const createdBys = parseMultiSelect(query.createdBys || query.createdBy);
+    const tagErrors = parseMultiSelect(query.tagErrors || query.tagError);
 
     return this.dataSource.transaction(async (manager) => {
       await this.setRlsContext(manager, userId);
@@ -110,17 +117,36 @@ export class ReplyService {
         .createQueryBuilder('reply')
         .leftJoinAndSelect('reply.brand', 'brand')
         .leftJoinAndSelect('reply.specialist', 'specialist')
-        .leftJoinAndSelect('reply.evaluations', 'evaluations');
+        .leftJoinAndSelect('reply.evaluations', 'evaluations')
+        .leftJoinAndSelect('evaluations.teamLead', 'teamLead');
 
-      // Filter: brand (tbrand) - multiselect
+      // Filter 1: brand (tbrand) - multiselect
       if (brandIds.length > 0) {
         qb.andWhere('reply.brandId IN (:...brandIds)', { brandIds });
       }
 
-      // Filter: created_by (treply.created_by) - multiselect
-      // Notice: qb.andWhere ensures AND between brand and created_by filters in database
+      // Filter 2: created_by (treply.created_by) - multiselect
+      // Notice: qb.andWhere ensures AND in database between filters
       if (createdBys.length > 0) {
         qb.andWhere('reply.createdBy IN (:...createdBys)', { createdBys });
+      }
+
+      // Filter 3: tag_errors (tevaluation.error_tags plus 'Pending' option) - multiselect
+      // Notice: qb.andWhere ensures AND in database between all 3 filters
+      if (tagErrors.length > 0) {
+        const hasPending = tagErrors.some((t) => t.toLowerCase() === 'pending');
+        const actualTags = tagErrors.filter((t) => t.toLowerCase() !== 'pending');
+
+        if (hasPending && actualTags.length > 0) {
+          qb.andWhere(
+            '(evaluations.id IS NULL OR evaluations.errorTags IN (:...actualTags))',
+            { actualTags },
+          );
+        } else if (hasPending) {
+          qb.andWhere('evaluations.id IS NULL');
+        } else {
+          qb.andWhere('evaluations.errorTags IN (:...actualTags)', { actualTags });
+        }
       }
 
       if (query.specialistId) {
