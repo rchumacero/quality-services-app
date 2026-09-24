@@ -2,41 +2,57 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, EntityManager } from 'typeorm';
 import { EvaluationEntity } from './entities/evaluation.entity';
 import { CreateEvaluationDto } from './dto/create-evaluation.dto';
 import { UpdateEvaluationDto } from './dto/update-evaluation.dto';
+import { IsOptional, IsUUID } from 'class-validator';
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
 export class EvaluationFilterQueryDto extends PaginationQueryDto {
+  @IsOptional()
+  @IsUUID()
   replyId?: string;
+
+  @IsOptional()
+  @IsUUID()
   teamLeadId?: string;
 }
 
 @Injectable()
 export class EvaluationService {
   constructor(
-    @InjectRepository(EvaluationEntity)
-    private readonly evaluationRepository: Repository<EvaluationEntity>,
+    private readonly dataSource: DataSource,
   ) {}
 
-  async create(dto: CreateEvaluationDto): Promise<EvaluationEntity> {
-    const evaluation = this.evaluationRepository.create({
-      replyId: dto.replyId,
-      teamLeadId: dto.teamLeadId,
-      evaluationDate: new Date(dto.evaluationDate),
-      score: dto.score,
-      errorTags: dto.errorTags || null,
-      feedback: dto.feedback || null,
-      createdBy: dto.createdBy || 'system',
-      status: dto.status || 'active',
-    });
-
-    return this.evaluationRepository.save(evaluation);
+  private async setRlsContext(manager: EntityManager, userId?: string): Promise<void> {
+    await manager.query(`SET LOCAL ROLE authenticated`);
+    await manager.query(`SELECT set_config('app.current_user_id', $1, true)`, [userId || '']);
   }
 
-  async findAll(query: EvaluationFilterQueryDto): Promise<{
+  async create(dto: CreateEvaluationDto, userId?: string): Promise<EvaluationEntity> {
+    return this.dataSource.transaction(async (manager) => {
+      await this.setRlsContext(manager, userId);
+
+      const evaluation = manager.getRepository(EvaluationEntity).create({
+        replyId: dto.replyId,
+        teamLeadId: dto.teamLeadId,
+        evaluationDate: new Date(dto.evaluationDate),
+        score: dto.score,
+        errorTags: dto.errorTags || null,
+        feedback: dto.feedback || null,
+        createdBy: dto.createdBy || 'system',
+        status: dto.status || 'active',
+      });
+
+      return manager.getRepository(EvaluationEntity).save(evaluation);
+    });
+  }
+
+  async findAll(
+    query: EvaluationFilterQueryDto,
+    userId?: string,
+  ): Promise<{
     items: EvaluationEntity[];
     total: number;
     page: number;
@@ -46,66 +62,88 @@ export class EvaluationService {
     const limit = query.limit || 20;
     const skip = (page - 1) * limit;
 
-    const qb = this.evaluationRepository
-      .createQueryBuilder('eval')
-      .leftJoinAndSelect('eval.reply', 'reply')
-      .leftJoinAndSelect('eval.teamLead', 'teamLead')
-      .leftJoinAndSelect('reply.brand', 'brand')
-      .leftJoinAndSelect('reply.specialist', 'specialist');
+    return this.dataSource.transaction(async (manager) => {
+      await this.setRlsContext(manager, userId);
 
-    if (query.replyId) {
-      qb.andWhere('eval.replyId = :replyId', { replyId: query.replyId });
-    }
+      const qb = manager
+        .getRepository(EvaluationEntity)
+        .createQueryBuilder('eval')
+        .leftJoinAndSelect('eval.reply', 'reply')
+        .leftJoinAndSelect('eval.teamLead', 'teamLead')
+        .leftJoinAndSelect('reply.brand', 'brand')
+        .leftJoinAndSelect('reply.specialist', 'specialist');
 
-    if (query.teamLeadId) {
-      qb.andWhere('eval.teamLeadId = :teamLeadId', { teamLeadId: query.teamLeadId });
-    }
+      if (query.replyId) {
+        qb.andWhere('eval.replyId = :replyId', { replyId: query.replyId });
+      }
 
-    if (query.status) {
-      qb.andWhere('eval.status = :status', { status: query.status });
-    }
+      if (query.teamLeadId) {
+        qb.andWhere('eval.teamLeadId = :teamLeadId', { teamLeadId: query.teamLeadId });
+      }
 
-    if (query.search) {
-      qb.andWhere('(eval.feedback ILIKE :search OR eval.errorTags ILIKE :search)', {
-        search: `%${query.search}%`,
+      if (query.status) {
+        qb.andWhere('eval.status = :status', { status: query.status });
+      }
+
+      qb.orderBy('eval.evaluationDate', 'DESC').skip(skip).take(limit);
+
+      const [items, total] = await qb.getManyAndCount();
+
+      return { items, total, page, limit };
+    });
+  }
+
+  async findOne(id: string, userId?: string): Promise<EvaluationEntity> {
+    return this.dataSource.transaction(async (manager) => {
+      await this.setRlsContext(manager, userId);
+
+      const evaluation = await manager.getRepository(EvaluationEntity).findOne({
+        where: { id },
+        relations: ['reply', 'teamLead', 'reply.brand', 'reply.specialist'],
       });
-    }
 
-    qb.orderBy('eval.evaluationDate', 'DESC').skip(skip).take(limit);
+      if (!evaluation) {
+        throw new NotFoundException(`Evaluation with ID "${id}" not found.`);
+      }
 
-    const [items, total] = await qb.getManyAndCount();
-
-    return { items, total, page, limit };
-  }
-
-  async findOne(id: string): Promise<EvaluationEntity> {
-    const evaluation = await this.evaluationRepository.findOne({
-      where: { id },
-      relations: ['reply', 'reply.brand', 'reply.specialist', 'teamLead'],
+      return evaluation;
     });
-
-    if (!evaluation) {
-      throw new NotFoundException(`Evaluation with ID "${id}" not found.`);
-    }
-
-    return evaluation;
   }
 
-  async update(id: string, dto: UpdateEvaluationDto): Promise<EvaluationEntity> {
-    const evaluation = await this.findOne(id);
+  async update(id: string, dto: UpdateEvaluationDto, userId?: string): Promise<EvaluationEntity> {
+    return this.dataSource.transaction(async (manager) => {
+      await this.setRlsContext(manager, userId);
 
-    Object.assign(evaluation, {
-      ...dto,
-      evaluationDate: dto.evaluationDate ? new Date(dto.evaluationDate) : evaluation.evaluationDate,
-      updatedBy: dto.updatedBy || 'system',
+      const repo = manager.getRepository(EvaluationEntity);
+      const evaluation = await repo.findOne({ where: { id } });
+
+      if (!evaluation) {
+        throw new NotFoundException(`Evaluation with ID "${id}" not found.`);
+      }
+
+      Object.assign(evaluation, {
+        ...dto,
+        evaluationDate: dto.evaluationDate ? new Date(dto.evaluationDate) : evaluation.evaluationDate,
+        updatedBy: dto.updatedBy || 'system',
+      });
+
+      return repo.save(evaluation);
     });
-
-    return this.evaluationRepository.save(evaluation);
   }
 
-  async remove(id: string): Promise<{ deleted: true; id: string }> {
-    const evaluation = await this.findOne(id);
-    await this.evaluationRepository.remove(evaluation);
-    return { deleted: true, id };
+  async remove(id: string, userId?: string): Promise<{ deleted: true; id: string }> {
+    return this.dataSource.transaction(async (manager) => {
+      await this.setRlsContext(manager, userId);
+
+      const repo = manager.getRepository(EvaluationEntity);
+      const evaluation = await repo.findOne({ where: { id } });
+
+      if (!evaluation) {
+        throw new NotFoundException(`Evaluation with ID "${id}" not found.`);
+      }
+
+      await repo.remove(evaluation);
+      return { deleted: true, id };
+    });
   }
 }
