@@ -87,16 +87,29 @@ export const DashboardPage: React.FC = () => {
             </h1>
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/60 text-xs font-semibold text-emerald-800">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span>RLS Active • {user?.role === 'specialist' ? 'Specialist Policy' : 'Team Lead Policy'}</span>
+              <span>
+                RLS Active •{' '}
+                {user?.role === 'specialist'
+                  ? 'Specialist Policy'
+                  : user?.role === 'team_lead'
+                  ? 'Team Lead Policy'
+                  : 'Administrator Policy'}
+              </span>
             </div>
             <span
               className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
                 user?.role === 'specialist'
                   ? 'bg-blue-100 text-blue-800 border border-blue-200'
-                  : 'bg-purple-100 text-purple-800 border border-purple-200'
+                  : user?.role === 'team_lead'
+                  ? 'bg-purple-100 text-purple-800 border border-purple-200'
+                  : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
               }`}
             >
-              {user?.role === 'specialist' ? 'Specialist (Self Only)' : 'Team Lead (Brand Portfolio)'}
+              {user?.role === 'specialist'
+                ? 'Specialist (Self Only)'
+                : user?.role === 'team_lead'
+                ? 'Team Lead (Brand Portfolio)'
+                : 'Administrator (Global Scope)'}
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-1 max-w-2xl">
@@ -129,13 +142,19 @@ export const DashboardPage: React.FC = () => {
         className={`p-4 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${
           user?.role === 'specialist'
             ? 'bg-blue-50/60 border-blue-200/80 text-blue-950'
-            : 'bg-purple-50/60 border-purple-200/80 text-purple-950'
+            : user?.role === 'team_lead'
+            ? 'bg-purple-50/60 border-purple-200/80 text-purple-950'
+            : 'bg-emerald-50/60 border-emerald-200/80 text-emerald-950'
         }`}
       >
         <div className="flex items-start gap-3">
           <div
             className={`p-2 rounded-xl mt-0.5 shrink-0 ${
-              user?.role === 'specialist' ? 'bg-blue-600 text-white' : 'bg-purple-600 text-white'
+              user?.role === 'specialist'
+                ? 'bg-blue-600 text-white'
+                : user?.role === 'team_lead'
+                ? 'bg-purple-600 text-white'
+                : 'bg-emerald-600 text-white'
             }`}
           >
             <Lock className="w-4 h-4" />
@@ -152,9 +171,13 @@ export const DashboardPage: React.FC = () => {
                 <>
                   As a <strong>Specialist</strong>, you can <strong>only view records created by yourself</strong> (<code>specialist_id = auth.uid()</code>). You currently see exactly <strong>{totalCount}</strong> replies you drafted for <strong>{assignedBrandsList.join(' & ')}</strong>.
                 </>
-              ) : (
+              ) : user?.role === 'team_lead' ? (
                 <>
                   As a <strong>Team Lead</strong>, you can view records created by yourself <em>plus</em> all replies authored by specialists assigned to your brands (<strong>{assignedBrandsList.join(', ')}</strong>). You currently see <strong>{totalCount}</strong> team replies.
+                </>
+              ) : (
+                <>
+                  As an <strong>Administrator</strong>, you have full global access across all managed brands, operations, replies, and evaluations.
                 </>
               )}
             </p>

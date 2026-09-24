@@ -10,11 +10,11 @@ export const LoginPage: React.FC = () => {
   const [rememberMe, setRememberMe] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
 
-  const { login } = useAuth();
+  const { login, testUsers } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/';
+  const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/dashboard';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,10 +62,11 @@ export const LoginPage: React.FC = () => {
                 onChange={(e) => setUsername(e.target.value)}
                 className="w-full pl-10 pr-9 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition appearance-none cursor-pointer"
               >
-                <option value="juan@qualityservice.com">juan@qualityservice.com (Juan • Specialist)</option>
-                <option value="carla@qualityservice.com">carla@qualityservice.com (Carla • Specialist)</option>
-                <option value="miguel@qualityservice.com">miguel@qualityservice.com (Miguel • Team Lead)</option>
-                <option value="lorena@qualityservice.com">lorena@qualityservice.com (Lorena • Team Lead)</option>
+                {testUsers.map((u) => (
+                  <option key={u.id} value={u.email}>
+                    {u.email} ({u.name} • {u.role === 'specialist' ? 'Specialist' : u.role === 'team_lead' ? 'Team Lead' : 'Administrator'})
+                  </option>
+                ))}
               </select>
               <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-400">
                 <ChevronDown className="w-4 h-4" />

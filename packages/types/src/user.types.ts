@@ -1,13 +1,15 @@
-export type UserRole = 'admin' | 'auditor' | 'manager' | 'customer';
+export type UserRole = 'admin' | 'auditor' | 'manager' | 'customer' | 'specialist' | 'team_lead';
 
 export interface UserProfile {
   id: string;
   email: string;
-  fullName: string;
-  role: UserRole;
+  fullName?: string;
+  name?: string;
+  role: UserRole | string;
   avatarUrl?: string;
-  createdAt: string;
-  updatedAt: string;
+  assignedBrands?: string[];
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface AuthSession {
@@ -15,4 +17,18 @@ export interface AuthSession {
   accessToken: string;
   refreshToken?: string;
   expiresAt: number;
+}
+
+export interface MenuItemOption {
+  id: string;
+  label: string;
+  path: string;
+  icon: string;
+  children?: MenuItemOption[];
+}
+
+export interface UserMenuPermissions {
+  role: string;
+  allowedMenus: string[];
+  items: MenuItemOption[];
 }

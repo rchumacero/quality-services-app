@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
+  LayoutDashboard,
   ShieldCheck,
   Users,
   Building2,
@@ -17,7 +18,7 @@ import {
 import { useAuth } from '../../../context/AuthContext';
 
 export const DashboardLayout: React.FC = () => {
-  const { user, logout, switchUser, testUsers } = useAuth();
+  const { user, logout, switchUser, testUsers, isMenuAllowed } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isAdminOpen, setIsAdminOpen] = useState(true);
@@ -34,6 +35,13 @@ export const DashboardLayout: React.FC = () => {
         ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/20'
         : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80'
     }`;
+
+  const getRoleLabel = (role?: string) => {
+    if (role === 'specialist') return 'Specialist';
+    if (role === 'team_lead') return 'Team Lead';
+    if (role === 'admin') return 'Administrator';
+    return role || 'User';
+  };
 
   return (
     <div className="min-h-screen bg-[#f8fafc] flex font-sans text-slate-800 antialiased selection:bg-blue-100">
@@ -58,72 +66,98 @@ export const DashboardLayout: React.FC = () => {
 
           {/* Navigation Links */}
           <div className="px-3 py-4 space-y-1">
-            {/* Admin Accordion */}
-            <div>
-              <button
-                type="button"
-                onClick={() => setIsAdminOpen(!isAdminOpen)}
-                className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider hover:text-slate-700 transition cursor-pointer"
+            {/* 1. Dashboard Item (Always at top, selected on login) */}
+            {isMenuAllowed('Dashboard') && (
+              <div
+                id="nav-dashboard"
+                onClick={() => navigate('/dashboard')}
+                className={navItemClass(location.pathname === '/dashboard' || location.pathname === '/')}
               >
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-3.5 h-3.5 text-slate-400" />
-                  <span>Admin</span>
+                <div className="flex items-center gap-2.5">
+                  <LayoutDashboard className="w-4 h-4" />
+                  <span>Dashboard</span>
                 </div>
-                <ChevronDown
-                  className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                    isAdminOpen ? 'rotate-0' : '-rotate-90'
-                  }`}
-                />
-              </button>
+              </div>
+            )}
 
-              {isAdminOpen && (
-                <div className="mt-1 space-y-1 pl-2">
-                  <div
-                    onClick={() => navigate('/')}
-                    className={navItemClass(location.pathname === '/' || location.pathname === '/users')}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <Users className="w-4 h-4" />
-                      <span>Users</span>
-                    </div>
+            {/* 2. Admin Accordion (Users & Brands) - Only visible if granted by backend role */}
+            {isMenuAllowed('Admin') && (
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setIsAdminOpen(!isAdminOpen)}
+                  className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider hover:text-slate-700 transition cursor-pointer"
+                >
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Admin</span>
                   </div>
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                      isAdminOpen ? 'rotate-0' : '-rotate-90'
+                    }`}
+                  />
+                </button>
 
-                  <div
-                    onClick={() => navigate('/brands')}
-                    className={navItemClass(location.pathname === '/brands')}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <Building2 className="w-4 h-4" />
-                      <span>Brands</span>
-                    </div>
+                {isAdminOpen && (
+                  <div className="mt-1 space-y-1 pl-2">
+                    {isMenuAllowed('Users') && (
+                      <div
+                        id="nav-users"
+                        onClick={() => navigate('/users')}
+                        className={navItemClass(location.pathname === '/users')}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <Users className="w-4 h-4" />
+                          <span>Users</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {isMenuAllowed('Brands') && (
+                      <div
+                        id="nav-brands"
+                        onClick={() => navigate('/brands')}
+                        className={navItemClass(location.pathname === '/brands')}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <Building2 className="w-4 h-4" />
+                          <span>Brands</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
+                )}
+              </div>
+            )}
+
+            {/* 3. Replies Item - Visible for specialist, team_lead, and admin */}
+            {isMenuAllowed('Replies') && (
+              <div
+                id="nav-replies"
+                onClick={() => navigate('/replies')}
+                className={navItemClass(location.pathname === '/replies')}
+              >
+                <div className="flex items-center gap-2.5">
+                  <MessageSquareReply className="w-4 h-4" />
+                  <span>Replies</span>
                 </div>
-              )}
-            </div>
-
-            {/* Replies Item */}
-            <div
-              id="nav-replies"
-              onClick={() => navigate('/replies')}
-              className={navItemClass(location.pathname === '/replies')}
-            >
-              <div className="flex items-center gap-2.5">
-                <MessageSquareReply className="w-4 h-4" />
-                <span>Replies</span>
               </div>
-            </div>
+            )}
 
-            {/* Evaluations Item */}
-            <div
-              id="nav-evaluations"
-              onClick={() => navigate('/evaluations')}
-              className={navItemClass(location.pathname === '/evaluations')}
-            >
-              <div className="flex items-center gap-2.5">
-                <ClipboardCheck className="w-4 h-4" />
-                <span>Evaluations</span>
+            {/* 4. Evaluations Item - Only visible if granted (e.g. admin) */}
+            {isMenuAllowed('Evaluations') && (
+              <div
+                id="nav-evaluations"
+                onClick={() => navigate('/evaluations')}
+                className={navItemClass(location.pathname === '/evaluations')}
+              >
+                <div className="flex items-center gap-2.5">
+                  <ClipboardCheck className="w-4 h-4" />
+                  <span>Evaluations</span>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
 
@@ -156,7 +190,7 @@ export const DashboardLayout: React.FC = () => {
                   {user?.name || 'User'}
                 </div>
                 <div className="text-[11px] text-slate-400 truncate">
-                  {user?.role === 'specialist' ? 'Specialist' : 'Team Lead'}
+                  {getRoleLabel(user?.role)}
                 </div>
               </div>
             </div>
@@ -211,7 +245,7 @@ export const DashboardLayout: React.FC = () => {
               >
                 {testUsers.map((u) => (
                   <option key={u.id} value={u.email}>
-                    {u.email} ({u.name} • {u.role === 'specialist' ? 'Specialist' : 'Team Lead'})
+                    {u.email} ({u.name} • {getRoleLabel(u.role)})
                   </option>
                 ))}
               </select>
@@ -221,10 +255,12 @@ export const DashboardLayout: React.FC = () => {
               className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${
                 user?.role === 'specialist'
                   ? 'bg-blue-100 text-blue-700'
-                  : 'bg-purple-100 text-purple-700'
+                  : user?.role === 'team_lead'
+                  ? 'bg-purple-100 text-purple-700'
+                  : 'bg-emerald-100 text-emerald-800'
               }`}
             >
-              {user?.role === 'specialist' ? 'Specialist' : 'Team Lead'}
+              {getRoleLabel(user?.role)}
             </span>
           </div>
 
