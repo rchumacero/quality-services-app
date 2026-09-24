@@ -9,7 +9,6 @@ import {
   ShieldCheck,
   Info,
   X,
-  Lock,
   UserCheck,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -81,75 +80,6 @@ export const DashboardPage: React.FC = () => {
         <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
           Welcome back, {user?.name || 'User'}!
         </h1>
-      </div>
-
-      {/* RLS Scope Callout Card */}
-      <div
-        className={`p-4 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${
-          user?.role === 'specialist'
-            ? 'bg-blue-50/60 border-blue-200/80 text-blue-950'
-            : user?.role === 'team_lead'
-            ? 'bg-purple-50/60 border-purple-200/80 text-purple-950'
-            : 'bg-emerald-50/60 border-emerald-200/80 text-emerald-950'
-        }`}
-      >
-        <div className="flex items-start gap-3">
-          <div
-            className={`p-2 rounded-xl mt-0.5 shrink-0 ${
-              user?.role === 'specialist'
-                ? 'bg-blue-600 text-white'
-                : user?.role === 'team_lead'
-                ? 'bg-purple-600 text-white'
-                : 'bg-emerald-600 text-white'
-            }`}
-          >
-            <Lock className="w-4 h-4" />
-          </div>
-          <div>
-            <div className="text-xs font-bold flex items-center gap-2">
-              <span>PostgreSQL Row Level Security (RLS) Policy Active:</span>
-              <code className="text-[11px] px-1.5 py-0.2 rounded bg-white/80 border font-mono">
-                treply_select_policy
-              </code>
-            </div>
-            <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">
-              {user?.role === 'specialist' ? (
-                <>
-                  As a <strong>Specialist</strong>, you can <strong>only view records created by yourself</strong> (<code>specialist_id = auth.uid()</code>). You currently see exactly <strong>{totalCount}</strong> replies you drafted for <strong>{assignedBrandsList.join(' & ')}</strong>.
-                </>
-              ) : user?.role === 'team_lead' ? (
-                <>
-                  As a <strong>Team Lead</strong>, you can view records created by yourself <em>plus</em> all replies authored by specialists assigned to your brands (<strong>{assignedBrandsList.join(', ')}</strong>). You currently see <strong>{totalCount}</strong> team replies.
-                </>
-              ) : (
-                <>
-                  As an <strong>Administrator</strong>, you have full global access across all managed brands, operations, replies, and evaluations.
-                </>
-              )}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 shrink-0">
-          <span className="text-[11px] font-semibold text-slate-500">Quick Test Switch:</span>
-          <div className="flex -space-x-1">
-            {testUsers.map((tu) => (
-              <button
-                key={tu.id}
-                type="button"
-                onClick={() => switchUser(tu.email)}
-                title={`Switch to ${tu.name} (${tu.role})`}
-                className={`w-7 h-7 rounded-full text-[11px] font-bold border-2 transition transform hover:scale-110 flex items-center justify-center cursor-pointer ${
-                  user?.email === tu.email
-                    ? 'border-blue-600 bg-blue-600 text-white z-10 shadow-sm'
-                    : 'border-white bg-slate-200 text-slate-700 hover:bg-slate-300'
-                }`}
-              >
-                {tu.name.charAt(0)}
-              </button>
-            ))}
-          </div>
-        </div>
       </div>
 
       {/* 4 KPI Summary Cards (Dynamic) */}
