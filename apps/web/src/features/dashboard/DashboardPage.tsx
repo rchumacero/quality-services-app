@@ -1,158 +1,234 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Download,
   Plus,
   CheckSquare,
   MessageSquareReply,
   Building2,
-  TrendingUp,
   AlertCircle,
   CheckCircle,
   Eye,
-  ArrowRight,
-  ExternalLink,
-  ChevronDown,
-  Users as UsersIcon,
+  ShieldCheck,
+  Info,
   X,
+  Lock,
+  UserCheck,
 } from 'lucide-react';
-
-interface AuditItem {
-  id: string;
-  brand: string;
-  type: 'Reply QA' | 'Evaluation';
-  auditor: string;
-  score: number;
-  status: 'Resolved' | 'In Review' | 'Critical';
-}
-
-const recentAudits: AuditItem[] = [
-  {
-    id: '#REV-9821',
-    brand: 'Nexus Pay',
-    type: 'Reply QA',
-    auditor: 'Carlos Mendoza',
-    score: 98,
-    status: 'Resolved',
-  },
-  {
-    id: '#REV-9820',
-    brand: 'Stellar Cloud',
-    type: 'Evaluation',
-    auditor: 'Elena R.',
-    score: 74,
-    status: 'In Review',
-  },
-  {
-    id: '#REV-9819',
-    brand: 'Apex Retail',
-    type: 'Reply QA',
-    auditor: 'Ignacio Soto',
-    score: 52,
-    status: 'Critical',
-  },
-  {
-    id: '#REV-9818',
-    brand: 'Nexus Pay',
-    type: 'Evaluation',
-    auditor: 'Marta Vidal',
-    score: 94,
-    status: 'Resolved',
-  },
-];
-
-const weeklyActivityData = [
-  { day: 'Mon 12', audited: 65, deviation: 12 },
-  { day: 'Tue 13', audited: 78, deviation: 10 },
-  { day: 'Wed 14', audited: 84, deviation: 14 },
-  { day: 'Thu 15', audited: 72, deviation: 15 },
-  { day: 'Fri 16', audited: 88, deviation: 12 },
-  { day: 'Sat 17', audited: 54, deviation: 8 },
-  { day: 'Today (Sun)', audited: 62, deviation: 9 },
-];
+import { useAuth } from '../../context/AuthContext';
+import { ALL_SEED_REPLIES, SeedReply, getRepliesForUser } from './data/seedReplies';
 
 export const DashboardPage: React.FC = () => {
-  const [selectedAudit, setSelectedAudit] = useState<AuditItem | null>(null);
+  const { user, switchUser, testUsers } = useAuth();
+  const [selectedReply, setSelectedReply] = useState<SeedReply | null>(null);
+
+  // Compute replies visible strictly according to Row Level Security rules
+  const visibleReplies = useMemo(() => {
+    if (!user) return ALL_SEED_REPLIES;
+    return getRepliesForUser(user.id, user.role, user.assignedBrands || []);
+  }, [user]);
+
+  // Derived KPI metrics for the current active user view
+  const totalCount = visibleReplies.length;
+  const criticalCount = visibleReplies.filter((r) => r.status === 'Critical').length;
+  const inReviewCount = visibleReplies.filter((r) => r.status === 'In Review').length;
+  const resolvedCount = visibleReplies.filter((r) => r.status === 'Resolved').length;
+
+  const averageScore = useMemo(() => {
+    if (visibleReplies.length === 0) return 0;
+    const sum = visibleReplies.reduce((acc, r) => acc + r.score, 0);
+    return Math.round((sum / visibleReplies.length) * 10) / 10;
+  }, [visibleReplies]);
+
+  // Deviation categories breakdown for current visible dataset
+  const deviationsSummary = useMemo(() => {
+    const condescending = visibleReplies.filter((r) => r.style === 'Condescending').length;
+    const verbose = visibleReplies.filter((r) => r.style === 'Overly Verbose').length;
+    const disrespectful = visibleReplies.filter((r) => r.style === 'Disrespectful').length;
+    const professional = visibleReplies.filter((r) => r.style === 'Direct & Professional').length;
+
+    return {
+      condescending,
+      verbose,
+      disrespectful,
+      professional,
+      totalDeviations: condescending + verbose + disrespectful,
+    };
+  }, [visibleReplies]);
+
+  // Brand summary for user's assigned brands
+  const brandDescriptions: Record<string, { summary: string; color: string; bg: string }> = {
+    IBM: {
+      summary: 'Enterprise SLAs, mainframe telemetry, and cloud storage compliance.',
+      color: 'text-blue-700',
+      bg: 'bg-blue-100',
+    },
+    NVIDIA: {
+      summary: 'GeForce & enterprise compute, 12VHPWR seating, and driver telemetry.',
+      color: 'text-emerald-700',
+      bg: 'bg-emerald-100',
+    },
+    APPLE: {
+      summary: 'AppleCare diagnostics, warranty boundaries, and liquid abuse protocols.',
+      color: 'text-purple-700',
+      bg: 'bg-purple-100',
+    },
+  };
+
+  const assignedBrandsList = user?.assignedBrands || ['IBM', 'NVIDIA'];
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      {/* Top Welcome & Actions Header */}
+      {/* Top Welcome & RLS Context Banner */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-              Welcome back, Elena!
+              Welcome back, {user?.name || 'User'}!
             </h1>
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200/60 text-[11px] font-semibold text-emerald-800">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span>System Online • Last sync 5 mins ago</span>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/60 text-xs font-semibold text-emerald-800">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>RLS Active • {user?.role === 'specialist' ? 'Specialist Policy' : 'Team Lead Policy'}</span>
             </div>
+            <span
+              className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                user?.role === 'specialist'
+                  ? 'bg-blue-100 text-blue-800 border border-blue-200'
+                  : 'bg-purple-100 text-purple-800 border border-purple-200'
+              }`}
+            >
+              {user?.role === 'specialist' ? 'Specialist (Self Only)' : 'Team Lead (Brand Portfolio)'}
+            </span>
           </div>
           <p className="text-xs text-slate-500 mt-1 max-w-2xl">
-            Consolidated operations summary for quality audit, reply moderation, and brand compliance.
+            Logged in as <strong className="text-slate-700">{user?.email}</strong> • Assigned Brands:{' '}
+            <span className="font-semibold text-blue-600">{assignedBrandsList.join(', ')}</span> • Data isolated by PostgreSQL Row Level Security.
           </p>
         </div>
 
         <div className="flex items-center gap-2.5 shrink-0">
           <button
             type="button"
-            className="inline-flex items-center gap-2 px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200/90 rounded-xl text-xs font-semibold text-slate-700 shadow-sm transition"
+            className="inline-flex items-center gap-2 px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200/90 rounded-xl text-xs font-semibold text-slate-700 shadow-xs transition"
           >
             <Download className="w-3.5 h-3.5 text-slate-500" />
-            <span>Download Executive Report</span>
+            <span>Export RLS Audit</span>
           </button>
 
           <button
             type="button"
-            className="inline-flex items-center gap-2 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl text-xs font-semibold shadow-sm shadow-blue-500/25 transition cursor-pointer"
+            className="inline-flex items-center gap-2 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl text-xs font-semibold shadow-xs shadow-blue-500/25 transition cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>New Evaluation</span>
+            <span>New Reply QA</span>
           </button>
         </div>
       </div>
 
-      {/* 4 KPI Summary Cards */}
+      {/* RLS Scope Callout Card */}
+      <div
+        className={`p-4 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${
+          user?.role === 'specialist'
+            ? 'bg-blue-50/60 border-blue-200/80 text-blue-950'
+            : 'bg-purple-50/60 border-purple-200/80 text-purple-950'
+        }`}
+      >
+        <div className="flex items-start gap-3">
+          <div
+            className={`p-2 rounded-xl mt-0.5 shrink-0 ${
+              user?.role === 'specialist' ? 'bg-blue-600 text-white' : 'bg-purple-600 text-white'
+            }`}
+          >
+            <Lock className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="text-xs font-bold flex items-center gap-2">
+              <span>PostgreSQL Row Level Security (RLS) Policy Active:</span>
+              <code className="text-[11px] px-1.5 py-0.2 rounded bg-white/80 border font-mono">
+                treply_select_policy
+              </code>
+            </div>
+            <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">
+              {user?.role === 'specialist' ? (
+                <>
+                  As a <strong>Specialist</strong>, you can <strong>only view records created by yourself</strong> (<code>specialist_id = auth.uid()</code>). You currently see exactly <strong>{totalCount}</strong> replies you drafted for <strong>{assignedBrandsList.join(' & ')}</strong>.
+                </>
+              ) : (
+                <>
+                  As a <strong>Team Lead</strong>, you can view records created by yourself <em>plus</em> all replies authored by specialists assigned to your brands (<strong>{assignedBrandsList.join(', ')}</strong>). You currently see <strong>{totalCount}</strong> team replies.
+                </>
+              )}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="text-[11px] font-semibold text-slate-500">Quick Test Switch:</span>
+          <div className="flex -space-x-1">
+            {testUsers.map((tu) => (
+              <button
+                key={tu.id}
+                type="button"
+                onClick={() => switchUser(tu.email)}
+                title={`Switch to ${tu.name} (${tu.role})`}
+                className={`w-7 h-7 rounded-full text-[11px] font-bold border-2 transition transform hover:scale-110 flex items-center justify-center cursor-pointer ${
+                  user?.email === tu.email
+                    ? 'border-blue-600 bg-blue-600 text-white z-10 shadow-sm'
+                    : 'border-white bg-slate-200 text-slate-700 hover:bg-slate-300'
+                }`}
+              >
+                {tu.name.charAt(0)}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* 4 KPI Summary Cards (Dynamic) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Card 1: Total Evaluations */}
+        {/* Card 1: Total Visible Replies */}
         <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-[0_2px_10px_rgb(0,0,0,0.02)] flex flex-col justify-between">
           <div className="flex items-start justify-between">
             <span className="text-[11px] font-bold text-slate-500 tracking-wider uppercase">
-              Total Evaluations
+              Visible Replies (RLS)
             </span>
             <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
               <CheckSquare className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-3">
-            <div className="text-3xl font-bold text-slate-900 tracking-tight">1,420</div>
+            <div className="text-3xl font-bold text-slate-900 tracking-tight">{totalCount}</div>
             <div className="flex items-center gap-2 mt-3 text-xs">
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 font-semibold text-[11px]">
-                <TrendingUp className="w-3 h-3" />
-                +12.4% vs last month
+                <ShieldCheck className="w-3 h-3" />
+                Filtered by RLS
               </span>
-              <span className="text-slate-400 font-medium text-[11px]">340 this week</span>
+              <span className="text-slate-400 font-medium text-[11px]">
+                {user?.role === 'specialist' ? 'Author only' : 'Team scope'}
+              </span>
             </div>
           </div>
         </div>
 
-        {/* Card 2: Pending Replies */}
+        {/* Card 2: Attention Required */}
         <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-[0_2px_10px_rgb(0,0,0,0.02)] flex flex-col justify-between">
           <div className="flex items-start justify-between">
             <span className="text-[11px] font-bold text-slate-500 tracking-wider uppercase">
-              Pending Replies
+              Attention Required
             </span>
-            <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
+            <div className="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
               <MessageSquareReply className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-3">
-            <div className="text-3xl font-bold text-slate-900 tracking-tight">84</div>
+            <div className="text-3xl font-bold text-slate-900 tracking-tight">
+              {criticalCount + inReviewCount}
+            </div>
             <div className="flex items-center gap-2 mt-3 text-xs">
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 font-semibold text-[11px]">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-red-50 text-red-700 font-semibold text-[11px]">
                 <AlertCircle className="w-3 h-3" />
-                Needs Attention
+                {criticalCount} Critical
               </span>
-              <span className="text-slate-400 font-medium text-[11px]">Avg SLA: 4.2h</span>
+              <span className="text-slate-400 font-medium text-[11px]">{inReviewCount} In Review</span>
             </div>
           </div>
         </div>
@@ -161,52 +237,46 @@ export const DashboardPage: React.FC = () => {
         <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-[0_2px_10px_rgb(0,0,0,0.02)] flex flex-col justify-between">
           <div className="flex items-start justify-between">
             <span className="text-[11px] font-bold text-slate-500 tracking-wider uppercase">
-              QA Conformity Rate
+              Average QA Score
             </span>
             <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
               <div className="w-4 h-4 rounded-full border-2 border-blue-600 border-t-transparent"></div>
             </div>
           </div>
           <div className="mt-3">
-            <div className="text-3xl font-bold text-slate-900 tracking-tight">98.2%</div>
+            <div className="text-3xl font-bold text-slate-900 tracking-tight">{averageScore}%</div>
             <div className="flex items-center gap-2 mt-3 text-xs">
               <span className="inline-flex items-center gap-1 text-emerald-700 font-semibold text-[11px]">
                 <CheckCircle className="w-3 h-3 text-emerald-600" />
-                Target Exceeded (&gt;95%)
+                {resolvedCount} Compliant ({resolvedCount}/{totalCount})
               </span>
-              <span className="text-slate-400 font-medium text-[11px]">Deviation: 1.8%</span>
             </div>
           </div>
         </div>
 
-        {/* Card 4: Active Brands */}
+        {/* Card 4: Active Brands for User */}
         <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-[0_2px_10px_rgb(0,0,0,0.02)] flex flex-col justify-between">
           <div className="flex items-start justify-between">
             <span className="text-[11px] font-bold text-slate-500 tracking-wider uppercase">
-              Active Brands
+              Assigned Brands
             </span>
             <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
               <Building2 className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-3">
-            <div className="text-3xl font-bold text-slate-900 tracking-tight">6</div>
-            <div className="flex items-center gap-2 mt-3 text-xs">
-              <div className="flex -space-x-1">
-                <span className="w-5 h-5 rounded-full bg-blue-600 text-white font-bold text-[9px] flex items-center justify-center ring-2 ring-white">
-                  NX
+            <div className="text-3xl font-bold text-slate-900 tracking-tight">
+              {assignedBrandsList.length}
+            </div>
+            <div className="flex items-center gap-1.5 mt-3 text-xs flex-wrap">
+              {assignedBrandsList.map((brand) => (
+                <span
+                  key={brand}
+                  className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-800 font-bold text-[10px]"
+                >
+                  {brand}
                 </span>
-                <span className="w-5 h-5 rounded-full bg-teal-600 text-white font-bold text-[9px] flex items-center justify-center ring-2 ring-white">
-                  ST
-                </span>
-                <span className="w-5 h-5 rounded-full bg-indigo-600 text-white font-bold text-[9px] flex items-center justify-center ring-2 ring-white">
-                  AP
-                </span>
-                <span className="w-5 h-5 rounded-full bg-slate-300 text-slate-700 font-bold text-[9px] flex items-center justify-center ring-2 ring-white">
-                  +3
-                </span>
-              </div>
-              <span className="text-slate-400 font-medium text-[11px]">100% compliance</span>
+              ))}
             </div>
           </div>
         </div>
@@ -214,91 +284,28 @@ export const DashboardPage: React.FC = () => {
 
       {/* Main Two-Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Column (8 cols): Charts & Table */}
+        {/* Left Column (8 cols): Table & Stream */}
         <div className="lg:col-span-8 space-y-6">
-          {/* Weekly Activity Bar Chart Card */}
-          <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-[0_2px_10px_rgb(0,0,0,0.02)]">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-6">
-              <div>
-                <h2 className="text-sm font-bold text-slate-900">
-                  Weekly Activity: Replies & Evaluations
-                </h2>
-                <p className="text-xs text-slate-400">
-                  Daily volume of audited interactions vs. detected deviations
-                </p>
-              </div>
-
-              <div className="flex items-center gap-4 text-xs font-medium text-slate-600">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded-sm bg-blue-600"></span>
-                  <span>Audited</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded-sm bg-blue-100"></span>
-                  <span>With Deviation</span>
-                </div>
-                <span className="text-slate-400">Last 7 days</span>
-              </div>
-            </div>
-
-            {/* Bar Chart Visualization */}
-            <div className="h-56 flex items-end justify-between gap-3 pt-6 px-4">
-              {weeklyActivityData.map((item, index) => (
-                <div key={index} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
-                  <div className="w-full max-w-[42px] flex items-end justify-center gap-1 h-full pb-2">
-                    {/* Audited Bar */}
-                    <div
-                      style={{ height: `${item.audited}%` }}
-                      className="w-1/2 bg-blue-600 hover:bg-blue-700 rounded-t-md transition-all relative group/bar"
-                    >
-                      <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] py-0.5 px-1.5 rounded opacity-0 group-hover/bar:opacity-100 pointer-events-none transition z-10 whitespace-nowrap">
-                        {item.audited} audits
-                      </div>
-                    </div>
-
-                    {/* Deviation Bar */}
-                    <div
-                      style={{ height: `${item.deviation * 2.5}%` }}
-                      className="w-1/2 bg-blue-100 hover:bg-blue-200 rounded-t-md transition-all relative group/dev"
-                    >
-                      <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] py-0.5 px-1.5 rounded opacity-0 group-hover/dev:opacity-100 pointer-events-none transition z-10 whitespace-nowrap">
-                        {item.deviation} dev
-                      </div>
-                    </div>
-                  </div>
-                  <span className="text-[11px] font-medium text-slate-500 whitespace-nowrap">
-                    {item.day}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
           {/* Recent Audit Stream Table Card */}
           <div className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_2px_10px_rgb(0,0,0,0.02)] overflow-hidden">
             <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div>
-                <h2 className="text-sm font-bold text-slate-900">Recent Audit Stream</h2>
+                <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                  <span>Authorized Customer Complaint Replies</span>
+                  <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[10px] font-bold">
+                    {totalCount} Visible Rows
+                  </span>
+                </h2>
                 <p className="text-xs text-slate-400">
-                  Latest generated evaluations and classified replies
+                  Showing records matching RLS criteria for{' '}
+                  <span className="text-slate-600 font-semibold">{user?.email}</span>
                 </p>
               </div>
 
-              <div className="flex items-center gap-4 text-xs font-semibold text-blue-600">
-                <button
-                  type="button"
-                  className="hover:text-blue-700 flex items-center gap-1 transition"
-                >
-                  <span>View all Replies</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  type="button"
-                  className="hover:text-blue-700 flex items-center gap-1 transition"
-                >
-                  <span>Go to Evaluations</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
+              <div className="flex items-center gap-3 text-xs font-semibold text-blue-600">
+                <span className="text-[11px] text-slate-400 font-normal">
+                  Click any row to inspect reply content & audit score
+                </span>
               </div>
             </div>
 
@@ -309,64 +316,79 @@ export const DashboardPage: React.FC = () => {
                   <tr className="border-b border-slate-100 bg-slate-50/50 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
                     <th className="py-3 px-5">ID</th>
                     <th className="py-3 px-4">Brand</th>
-                    <th className="py-3 px-4">Type</th>
-                    <th className="py-3 px-4">QA Auditor</th>
+                    <th className="py-3 px-4">Specialist / Author</th>
+                    <th className="py-3 px-4">Tone & Civility Style</th>
                     <th className="py-3 px-4">Score</th>
                     <th className="py-3 px-4">Status</th>
-                    <th className="py-3 px-5 text-right">Action</th>
+                    <th className="py-3 px-5 text-right">Inspect</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {recentAudits.map((audit) => {
+                  {visibleReplies.map((reply) => {
                     const scoreColorClass =
-                      audit.score >= 90
+                      reply.score >= 90
                         ? 'text-emerald-600'
-                        : audit.score >= 70
+                        : reply.score >= 70
                         ? 'text-slate-800'
                         : 'text-red-600';
 
                     return (
                       <tr
-                        key={audit.id}
-                        className="hover:bg-slate-50/70 transition cursor-pointer"
-                        onClick={() => setSelectedAudit(audit)}
+                        key={reply.id}
+                        className="hover:bg-slate-50/80 transition cursor-pointer group"
+                        onClick={() => setSelectedReply(reply)}
                       >
-                        <td className="py-3.5 px-5 font-semibold text-slate-800">{audit.id}</td>
+                        <td className="py-3.5 px-5 font-semibold text-slate-800 whitespace-nowrap">
+                          {reply.id}
+                        </td>
                         <td className="py-3.5 px-4">
-                          <div className="flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-blue-600"></span>
-                            <span className="font-medium text-slate-800">{audit.brand}</span>
-                          </div>
+                          <span
+                            className={`px-2 py-0.5 rounded-md font-bold text-[10px] ${
+                              reply.brand === 'IBM'
+                                ? 'bg-blue-100 text-blue-700'
+                                : reply.brand === 'NVIDIA'
+                                ? 'bg-emerald-100 text-emerald-700'
+                                : 'bg-purple-100 text-purple-700'
+                            }`}
+                          >
+                            {reply.brand}
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-4 text-slate-700 font-medium">
+                          {reply.specialistName}
                         </td>
                         <td className="py-3.5 px-4">
                           <span
                             className={`px-2 py-0.5 rounded-md font-medium text-[11px] ${
-                              audit.type === 'Reply QA'
+                              reply.style === 'Direct & Professional'
+                                ? 'bg-emerald-50 text-emerald-700'
+                                : reply.style === 'Overly Verbose'
                                 ? 'bg-sky-50 text-sky-700'
-                                : 'bg-indigo-50 text-indigo-700'
+                                : reply.style === 'Condescending'
+                                ? 'bg-amber-50 text-amber-700'
+                                : 'bg-red-50 text-red-700 font-semibold'
                             }`}
                           >
-                            {audit.type}
+                            {reply.style}
                           </span>
                         </td>
-                        <td className="py-3.5 px-4 text-slate-600">{audit.auditor}</td>
                         <td className="py-3.5 px-4 font-bold">
-                          <span className={scoreColorClass}>{audit.score}/100</span>
+                          <span className={scoreColorClass}>{reply.score}/100</span>
                         </td>
                         <td className="py-3.5 px-4">
-                          {audit.status === 'Resolved' && (
+                          {reply.status === 'Resolved' && (
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-semibold text-[11px]">
                               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                              Resolved
+                              Compliant
                             </span>
                           )}
-                          {audit.status === 'In Review' && (
+                          {reply.status === 'In Review' && (
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 font-semibold text-[11px]">
                               <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
                               In Review
                             </span>
                           )}
-                          {audit.status === 'Critical' && (
+                          {reply.status === 'Critical' && (
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-red-50 text-red-700 font-semibold text-[11px]">
                               <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
                               Critical
@@ -376,8 +398,8 @@ export const DashboardPage: React.FC = () => {
                         <td className="py-3.5 px-5 text-right">
                           <button
                             type="button"
-                            className="p-1 text-slate-400 hover:text-blue-600 transition"
-                            title="View details"
+                            className="p-1 text-slate-400 group-hover:text-blue-600 transition"
+                            title="Inspect reply text"
                           >
                             <Eye className="w-4 h-4" />
                           </button>
@@ -391,82 +413,86 @@ export const DashboardPage: React.FC = () => {
 
             {/* Table Footer */}
             <div className="p-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 bg-slate-50/30">
-              <span>Showing 4 of 128 records audited today</span>
-              <button
-                type="button"
-                className="font-medium text-slate-600 hover:text-slate-900 inline-flex items-center gap-1 transition"
-              >
-                <span>Load more results</span>
-                <ChevronDown className="w-3.5 h-3.5" />
-              </button>
+              <span>
+                Showing <strong>{totalCount}</strong> records authorized for <strong>{user?.name}</strong>
+              </span>
+              <span className="font-mono text-[10px] text-slate-400">
+                SQL Filter: {user?.role === 'specialist' ? 'specialist_id = auth.uid()' : 'user_brand_managed(brand_id)'}
+              </span>
             </div>
           </div>
         </div>
 
-        {/* Right Column (4 cols): User Management, Brands Config, Deviation Distribution */}
+        {/* Right Column (4 cols): User Context, Brand Config, Deviation Distribution */}
         <div className="lg:col-span-4 space-y-6">
-          {/* Card 1: User Management */}
+          {/* Card 1: Active User Details & Role */}
           <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-[0_2px_10px_rgb(0,0,0,0.02)]">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <div className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
-                  <UsersIcon className="w-4 h-4" />
+                  <UserCheck className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-xs font-bold text-slate-900">User Management</h3>
-                  <div className="text-[10px] text-slate-400">Admin &gt; Users</div>
+                  <h3 className="text-xs font-bold text-slate-900">Current Session User</h3>
+                  <div className="text-[10px] text-slate-400">Simulated Auth Context</div>
                 </div>
               </div>
 
-              <button
-                type="button"
-                className="text-xs font-semibold text-blue-600 hover:text-blue-700 transition"
+              <span
+                className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${
+                  user?.role === 'specialist'
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'bg-purple-100 text-purple-700'
+                }`}
               >
-                Directory &gt;
-              </button>
+                {user?.role === 'specialist' ? 'Specialist' : 'Team Lead'}
+              </span>
             </div>
 
-            <div className="flex items-center justify-between my-4">
-              <div>
-                <div className="text-2xl font-bold text-slate-900">
-                  48 <span className="text-xs font-normal text-slate-500">active</span>
-                </div>
-                <div className="text-[11px] text-slate-400">4 pending invitations</div>
+            <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 space-y-2 text-xs">
+              <div className="flex justify-between">
+                <span className="text-slate-400">Name:</span>
+                <span className="font-bold text-slate-800">{user?.name}</span>
               </div>
-
-              <div className="flex -space-x-1.5">
-                <div className="w-7 h-7 rounded-full bg-blue-600 text-white font-semibold text-[10px] flex items-center justify-center ring-2 ring-white">
-                  ER
-                </div>
-                <div className="w-7 h-7 rounded-full bg-emerald-600 text-white font-semibold text-[10px] flex items-center justify-center ring-2 ring-white">
-                  CM
-                </div>
-                <div className="w-7 h-7 rounded-full bg-indigo-600 text-white font-semibold text-[10px] flex items-center justify-center ring-2 ring-white">
-                  MV
-                </div>
-                <div className="w-7 h-7 rounded-full bg-slate-200 text-slate-700 font-semibold text-[10px] flex items-center justify-center ring-2 ring-white">
-                  +45
-                </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Account:</span>
+                <span className="font-semibold text-slate-800">{user?.email}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">UUID:</span>
+                <span className="font-mono text-[10px] text-slate-600 truncate max-w-[170px]" title={user?.id}>
+                  {user?.id}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Assigned Brands:</span>
+                <span className="font-bold text-blue-700">{assignedBrandsList.join(', ')}</span>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-slate-100">
-              <button
-                type="button"
-                className="w-full py-2 px-3 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold transition"
-              >
-                Invite Auditor
-              </button>
-              <button
-                type="button"
-                className="w-full py-2 px-3 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold transition"
-              >
-                Manage Roles
-              </button>
+            <div className="mt-4 pt-3 border-t border-slate-100">
+              <div className="text-[11px] font-semibold text-slate-600 mb-2">Switch Active User to Test RLS:</div>
+              <div className="grid grid-cols-2 gap-2">
+                {testUsers.map((tu) => (
+                  <button
+                    key={tu.id}
+                    type="button"
+                    onClick={() => switchUser(tu.email)}
+                    className={`p-2 rounded-xl border text-left text-xs transition cursor-pointer ${
+                      user?.email === tu.email
+                        ? 'border-blue-600 bg-blue-50/70 text-blue-900 font-bold shadow-xs'
+                        : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
+                    }`}
+                  >
+                    <div className="truncate">{tu.name}</div>
+                    <div className="text-[10px] text-slate-400 capitalize">{tu.role.replace('_', ' ')}</div>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
-          {/* Card 2: Brand Configuration */}
+          {/* Card 2: Brand Configuration (Filtered to user's assigned brands) */}
           <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-[0_2px_10px_rgb(0,0,0,0.02)]">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
@@ -474,201 +500,238 @@ export const DashboardPage: React.FC = () => {
                   <Building2 className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-xs font-bold text-slate-900">Brand Configuration</h3>
-                  <div className="text-[10px] text-slate-400">Admin &gt; Brands</div>
+                  <h3 className="text-xs font-bold text-slate-900">Assigned Brands ({assignedBrandsList.length})</h3>
+                  <div className="text-[10px] text-slate-400">Quality Procedures & Policies</div>
                 </div>
               </div>
-
-              <button
-                type="button"
-                className="p-1 rounded-lg text-blue-600 hover:bg-blue-50 transition"
-                title="Add brand"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
             </div>
 
             <div className="space-y-3">
-              {/* Brand Item 1 */}
-              <div className="p-2.5 rounded-xl bg-slate-50/70 border border-slate-100 flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 font-bold text-[11px] flex items-center justify-center">
-                    NP
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold text-slate-800 leading-tight">Nexus Pay</div>
-                    <div className="text-[10px] text-slate-400">Rule: Tone & SLA</div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-xs font-semibold text-slate-800">640 tickets</div>
-                  <span className="text-[10px] font-semibold text-emerald-600">Active</span>
-                </div>
-              </div>
+              {assignedBrandsList.map((brandName) => {
+                const info = brandDescriptions[brandName] || {
+                  summary: 'General enterprise standard procedures apply.',
+                  color: 'text-blue-700',
+                  bg: 'bg-blue-100',
+                };
+                const brandRepliesCount = visibleReplies.filter((r) => r.brand === brandName).length;
 
-              {/* Brand Item 2 */}
-              <div className="p-2.5 rounded-xl bg-slate-50/70 border border-slate-100 flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-teal-100 text-teal-700 font-bold text-[11px] flex items-center justify-center">
-                    SC
+                return (
+                  <div
+                    key={brandName}
+                    className="p-3 rounded-xl bg-slate-50/70 border border-slate-100 space-y-1"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className={`px-2 py-0.5 rounded-md font-bold text-[10px] ${info.bg} ${info.color}`}>
+                          {brandName}
+                        </span>
+                        <span className="text-xs font-bold text-slate-800">{brandName} Operations</span>
+                      </div>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">
+                        {brandRepliesCount} records
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 leading-snug">{info.summary}</p>
                   </div>
-                  <div>
-                    <div className="text-xs font-bold text-slate-800 leading-tight">Stellar Cloud</div>
-                    <div className="text-[10px] text-slate-400">Rule: Tech Escalation</div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-xs font-semibold text-slate-800">420 tickets</div>
-                  <span className="text-[10px] font-semibold text-emerald-600">Active</span>
-                </div>
-              </div>
-
-              {/* Brand Item 3 */}
-              <div className="p-2.5 rounded-xl bg-slate-50/70 border border-slate-100 flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 font-bold text-[11px] flex items-center justify-center">
-                    AR
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold text-slate-800 leading-tight">Apex Retail</div>
-                    <div className="text-[10px] text-slate-400">Rule: Return Policy</div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-xs font-semibold text-slate-800">360 tickets</div>
-                  <span className="text-[10px] font-semibold text-red-600">Audit req.</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-4 pt-3 border-t border-slate-100">
-              <button
-                type="button"
-                className="w-full text-center text-xs font-semibold text-blue-600 hover:text-blue-700 inline-flex items-center justify-center gap-1 transition"
-              >
-                <span>View all 6 Configured Brands</span>
-                <ExternalLink className="w-3 h-3" />
-              </button>
+                );
+              })}
             </div>
           </div>
 
-          {/* Card 3: Deviation Distribution */}
+          {/* Card 3: Deviation Distribution (Calculated from user's visible replies) */}
           <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-[0_2px_10px_rgb(0,0,0,0.02)]">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-xs font-bold text-slate-900">Deviation Distribution</h3>
+                <h3 className="text-xs font-bold text-slate-900">Response Style Distribution</h3>
                 <div className="text-[10px] text-slate-400">
-                  Categories of detected flaws this cycle
+                  Classification of {totalCount} authorized records
                 </div>
               </div>
               <span className="px-2 py-0.5 rounded-md bg-slate-100 text-[10px] font-bold text-slate-600">
-                Total: 54
+                {deviationsSummary.totalDeviations} Deviations
               </span>
             </div>
 
             <div className="space-y-3.5">
-              {/* Flaw 1 */}
+              {/* Direct & Professional */}
               <div>
                 <div className="flex justify-between text-xs mb-1">
                   <span className="text-slate-700 font-medium flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-blue-600"></span>
-                    Syntactic & grammar errors
+                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    Direct & Professional
                   </span>
-                  <span className="font-semibold text-slate-900">24 cases</span>
+                  <span className="font-semibold text-slate-900">
+                    {deviationsSummary.professional} cases
+                  </span>
                 </div>
                 <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                  <div className="bg-blue-600 h-1.5 rounded-full" style={{ width: '44%' }}></div>
+                  <div
+                    className="bg-emerald-500 h-1.5 rounded-full"
+                    style={{
+                      width: `${totalCount > 0 ? (deviationsSummary.professional / totalCount) * 100 : 0}%`,
+                    }}
+                  ></div>
                 </div>
               </div>
 
-              {/* Flaw 2 */}
+              {/* Overly Verbose */}
+              <div>
+                <div className="flex justify-between text-xs mb-1">
+                  <span className="text-slate-700 font-medium flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                    Overly Verbose / Slow to point
+                  </span>
+                  <span className="font-semibold text-slate-900">
+                    {deviationsSummary.verbose} cases
+                  </span>
+                </div>
+                <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                  <div
+                    className="bg-blue-500 h-1.5 rounded-full"
+                    style={{
+                      width: `${totalCount > 0 ? (deviationsSummary.verbose / totalCount) * 100 : 0}%`,
+                    }}
+                  ></div>
+                </div>
+              </div>
+
+              {/* Condescending */}
+              <div>
+                <div className="flex justify-between text-xs mb-1">
+                  <span className="text-slate-700 font-medium flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                    Condescending Tone
+                  </span>
+                  <span className="font-semibold text-slate-900">
+                    {deviationsSummary.condescending} cases
+                  </span>
+                </div>
+                <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                  <div
+                    className="bg-amber-500 h-1.5 rounded-full"
+                    style={{
+                      width: `${totalCount > 0 ? (deviationsSummary.condescending / totalCount) * 100 : 0}%`,
+                    }}
+                  ></div>
+                </div>
+              </div>
+
+              {/* Disrespectful */}
               <div>
                 <div className="flex justify-between text-xs mb-1">
                   <span className="text-slate-700 font-medium flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-red-500"></span>
-                    Impolite / Lack of empathy
+                    Disrespectful / Harsh
                   </span>
-                  <span className="font-semibold text-slate-900">18 cases</span>
+                  <span className="font-semibold text-slate-900">
+                    {deviationsSummary.disrespectful} cases
+                  </span>
                 </div>
                 <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                  <div className="bg-red-500 h-1.5 rounded-full" style={{ width: '33%' }}></div>
+                  <div
+                    className="bg-red-500 h-1.5 rounded-full"
+                    style={{
+                      width: `${totalCount > 0 ? (deviationsSummary.disrespectful / totalCount) * 100 : 0}%`,
+                    }}
+                  ></div>
                 </div>
               </div>
-
-              {/* Flaw 3 */}
-              <div>
-                <div className="flex justify-between text-xs mb-1">
-                  <span className="text-slate-700 font-medium flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-teal-600"></span>
-                    Tone unsuitable for brand
-                  </span>
-                  <span className="font-semibold text-slate-900">12 cases</span>
-                </div>
-                <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                  <div className="bg-teal-600 h-1.5 rounded-full" style={{ width: '22%' }}></div>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px]">
-              <span className="text-slate-500">
-                Impact: <span className="font-semibold text-slate-700">-0.4% on NPS</span>
-              </span>
-              <button
-                type="button"
-                className="font-semibold text-blue-600 hover:text-blue-700 transition"
-              >
-                Configure Criteria
-              </button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Audit Detail Modal */}
-      {selectedAudit && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
+      {/* Audit / Reply Detail Modal */}
+      {selectedReply && (
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between pb-4 border-b border-slate-100">
               <div className="flex items-center gap-2">
-                <span className="font-bold text-sm text-slate-900">{selectedAudit.id}</span>
-                <span className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 font-semibold text-[11px]">
-                  {selectedAudit.brand}
+                <span className="font-bold text-sm text-slate-900">{selectedReply.id}</span>
+                <span
+                  className={`px-2 py-0.5 rounded-md font-bold text-[11px] ${
+                    selectedReply.brand === 'IBM'
+                      ? 'bg-blue-100 text-blue-700'
+                      : selectedReply.brand === 'NVIDIA'
+                      ? 'bg-emerald-100 text-emerald-700'
+                      : 'bg-purple-100 text-purple-700'
+                  }`}
+                >
+                  {selectedReply.brand}
                 </span>
+                <span className="text-xs text-slate-400">• {selectedReply.dateAgo}</span>
               </div>
               <button
                 type="button"
-                onClick={() => setSelectedAudit(null)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition"
+                onClick={() => setSelectedReply(null)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="py-4 space-y-3 text-xs">
-              <div className="flex justify-between py-1.5 border-b border-slate-50">
-                <span className="text-slate-500">Record Type</span>
-                <span className="font-semibold text-slate-800">{selectedAudit.type}</span>
+            <div className="py-4 space-y-4 text-xs">
+              <div>
+                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                  Customer Complaint Scenario
+                </div>
+                <div className="font-semibold text-slate-800 text-sm">{selectedReply.caseTitle}</div>
               </div>
-              <div className="flex justify-between py-1.5 border-b border-slate-50">
-                <span className="text-slate-500">QA Auditor</span>
-                <span className="font-semibold text-slate-800">{selectedAudit.auditor}</span>
+
+              <div>
+                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                  Specialist Reply Text (Audited)
+                </div>
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 leading-relaxed font-sans text-xs">
+                  "{selectedReply.content}"
+                </div>
               </div>
-              <div className="flex justify-between py-1.5 border-b border-slate-50">
-                <span className="text-slate-500">Quality Score</span>
-                <span className="font-bold text-sm text-blue-600">{selectedAudit.score} / 100</span>
+
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                  <div className="text-slate-400 text-[10px]">Author Specialist</div>
+                  <div className="font-bold text-slate-800 mt-0.5">{selectedReply.specialistName}</div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                  <div className="text-slate-400 text-[10px]">Style Classification</div>
+                  <div className="font-bold text-slate-800 mt-0.5">{selectedReply.style}</div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                  <div className="text-slate-400 text-[10px]">Quality Score</div>
+                  <div
+                    className={`font-bold text-sm mt-0.5 ${
+                      selectedReply.score >= 90
+                        ? 'text-emerald-600'
+                        : selectedReply.score >= 70
+                        ? 'text-slate-800'
+                        : 'text-red-600'
+                    }`}
+                  >
+                    {selectedReply.score} / 100
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                  <div className="text-slate-400 text-[10px]">Audit Status</div>
+                  <div className="font-bold text-slate-800 mt-0.5">{selectedReply.status}</div>
+                </div>
               </div>
-              <div className="flex justify-between py-1.5 border-b border-slate-50">
-                <span className="text-slate-500">Status</span>
-                <span className="font-semibold text-slate-800">{selectedAudit.status}</span>
+
+              <div className="p-2.5 rounded-xl bg-blue-50/60 border border-blue-100 text-[11px] text-blue-900 flex items-center gap-2">
+                <Info className="w-4 h-4 text-blue-600 shrink-0" />
+                <span>
+                  RLS Authorization check passed: <code>auth.uid() = {user?.id}</code> has access to this record.
+                </span>
               </div>
             </div>
 
-            <div className="pt-2 flex justify-end gap-2">
+            <div className="pt-2 flex justify-end gap-2 border-t border-slate-100">
               <button
                 type="button"
-                onClick={() => setSelectedAudit(null)}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs transition"
+                onClick={() => setSelectedReply(null)}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs transition cursor-pointer"
               >
                 Close
               </button>
