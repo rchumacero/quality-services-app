@@ -6,6 +6,7 @@ import { ProtectedRoute } from './ProtectedRoute';
 import { DashboardLayout } from '../features/dashboard/components/DashboardLayout';
 import { DashboardPage } from '../features/dashboard/DashboardPage';
 import { RepliesPage } from '../features/replies/RepliesPage';
+import { EvaluationsPage } from '../features/evaluations/EvaluationsPage';
 
 const LoginRedirect: React.FC = () => {
   const { isAuthenticated } = useAuth();
@@ -34,7 +35,7 @@ export const AppRoutes: React.FC = () => {
         <Route path="users" element={<DashboardPage />} />
         <Route path="brands" element={<DashboardPage />} />
         <Route path="replies" element={<RepliesPage />} />
-        <Route path="evaluations" element={<DashboardPage />} />
+        <Route path="evaluations" element={<EvaluationsPage />} />
       </Route>
 
       {/* Catch-all */}

@@ -115,6 +115,7 @@ export const DashboardLayout: React.FC = () => {
 
             {/* Evaluations Item */}
             <div
+              id="nav-evaluations"
               onClick={() => navigate('/evaluations')}
               className={navItemClass(location.pathname === '/evaluations')}
             >

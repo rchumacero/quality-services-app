@@ -4,7 +4,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
-  IsUUID,
+  Matches,
   Max,
   MaxLength,
   Min,
@@ -12,11 +12,15 @@ import {
 import { Type } from 'class-transformer';
 
 export class CreateEvaluationDto {
-  @IsUUID()
+  @Matches(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/, {
+    message: 'replyId must be a valid UUID',
+  })
   @IsNotEmpty()
   replyId!: string;
 
-  @IsUUID()
+  @Matches(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/, {
+    message: 'teamLeadId must be a valid UUID',
+  })
   @IsNotEmpty()
   teamLeadId!: string;
 

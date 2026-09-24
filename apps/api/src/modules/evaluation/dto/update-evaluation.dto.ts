@@ -3,7 +3,7 @@ import {
   IsInt,
   IsOptional,
   IsString,
-  IsUUID,
+  Matches,
   Max,
   MaxLength,
   Min,
@@ -12,11 +12,15 @@ import { Type } from 'class-transformer';
 
 export class UpdateEvaluationDto {
   @IsOptional()
-  @IsUUID()
+  @Matches(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/, {
+    message: 'replyId must be a valid UUID',
+  })
   replyId?: string;
 
   @IsOptional()
-  @IsUUID()
+  @Matches(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/, {
+    message: 'teamLeadId must be a valid UUID',
+  })
   teamLeadId?: string;
 
   @IsOptional()
