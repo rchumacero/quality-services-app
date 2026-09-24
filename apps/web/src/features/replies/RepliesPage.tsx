@@ -11,7 +11,6 @@ import {
   AlertCircle,
   Building2,
   User,
-  ShieldCheck,
   X,
 } from 'lucide-react';
 import { apiClient } from '../../lib/apiClient';
@@ -202,19 +201,10 @@ export const RepliesPage: React.FC = () => {
       {/* Top Header Banner */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2.5">
-              <MessageSquareReply className="w-6 h-6 text-blue-600" />
-              <span>Customer Complaint Replies</span>
-            </h1>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-xs font-semibold text-blue-800">
-              <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
-              <span>RLS Active: {user?.role === 'specialist' ? 'Author Isolation' : 'Team Lead Scope'}</span>
-            </div>
-          </div>
-          <p className="text-xs text-slate-500 mt-1 max-w-3xl">
-            Manage official customer complaint replies. Query results are protected by PostgreSQL Row Level Security.
-          </p>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2.5">
+            <MessageSquareReply className="w-6 h-6 text-blue-600" />
+            <span>Customer Complaint Replies</span>
+          </h1>
         </div>
 
         <div className="flex items-center gap-2.5 shrink-0">

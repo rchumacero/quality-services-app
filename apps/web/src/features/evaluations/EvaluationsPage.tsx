@@ -9,7 +9,6 @@ import {
   AlertCircle,
   Building2,
   User,
-  ShieldCheck,
   X,
   Award,
   Clock,
@@ -250,19 +249,10 @@ export const EvaluationsPage: React.FC = () => {
       {/* Top Header Banner */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2.5">
-              <ClipboardCheck className="w-6 h-6 text-blue-600" />
-              <span>QA Reply Evaluations</span>
-            </h1>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-xs font-semibold text-blue-800">
-              <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
-              <span>RLS Scope: {user?.role === 'specialist' ? 'Author View' : 'Team Lead Portfolio'}</span>
-            </div>
-          </div>
-          <p className="text-xs text-slate-500 mt-1 max-w-3xl">
-            Customer complaint replies left-joined with quality evaluations (<code className="font-mono">treply LEFT JOIN tevaluation</code>).
-          </p>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2.5">
+            <ClipboardCheck className="w-6 h-6 text-blue-600" />
+            <span>QA Reply Evaluations</span>
+          </h1>
         </div>
 
         <div className="flex items-center gap-2.5 shrink-0">
