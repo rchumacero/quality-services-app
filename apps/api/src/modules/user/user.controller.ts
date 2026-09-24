@@ -13,6 +13,7 @@ import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
+import { CurrentUserId } from '../../common/decorators/current-user-id.decorator';
 
 @Controller('users')
 export class UserController {
@@ -21,6 +22,23 @@ export class UserController {
   @Post()
   create(@Body() createDto: CreateUserDto) {
     return this.userService.create(createDto);
+  }
+
+  @Get('menu-options')
+  getMenuOptions(
+    @Query('role') roleQuery?: string,
+    @CurrentUserId() currentUserId?: string,
+  ) {
+    return this.userService.getMenuPermissions(roleQuery, currentUserId);
+  }
+
+  @Get('validate-menu-access')
+  validateMenuAccess(
+    @Query('role') role: string,
+    @Query('menu') menu: string,
+  ) {
+    const isGranted = UserService.validateMenuAccessByRole(role, menu);
+    return { role, menu, isGranted };
   }
 
   @Get()

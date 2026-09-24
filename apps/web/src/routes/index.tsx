@@ -11,9 +11,20 @@ import { EvaluationsPage } from '../features/evaluations/EvaluationsPage';
 const LoginRedirect: React.FC = () => {
   const { isAuthenticated } = useAuth();
   if (isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
   return <LoginPage />;
+};
+
+const PermissionRoute: React.FC<{ menuName: string; children: React.ReactElement }> = ({
+  menuName,
+  children,
+}) => {
+  const { isMenuAllowed } = useAuth();
+  if (!isMenuAllowed(menuName)) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  return children;
 };
 
 export const AppRoutes: React.FC = () => {
@@ -31,15 +42,44 @@ export const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       >
-        <Route index element={<DashboardPage />} />
-        <Route path="users" element={<DashboardPage />} />
-        <Route path="brands" element={<DashboardPage />} />
-        <Route path="replies" element={<RepliesPage />} />
-        <Route path="evaluations" element={<EvaluationsPage />} />
+        <Route index element={<Navigate to="/dashboard" replace />} />
+        <Route path="dashboard" element={<DashboardPage />} />
+        <Route
+          path="users"
+          element={
+            <PermissionRoute menuName="Admin">
+              <DashboardPage />
+            </PermissionRoute>
+          }
+        />
+        <Route
+          path="brands"
+          element={
+            <PermissionRoute menuName="Admin">
+              <DashboardPage />
+            </PermissionRoute>
+          }
+        />
+        <Route
+          path="replies"
+          element={
+            <PermissionRoute menuName="Replies">
+              <RepliesPage />
+            </PermissionRoute>
+          }
+        />
+        <Route
+          path="evaluations"
+          element={
+            <PermissionRoute menuName="Evaluations">
+              <EvaluationsPage />
+            </PermissionRoute>
+          }
+        />
       </Route>
 
       {/* Catch-all */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );
 };

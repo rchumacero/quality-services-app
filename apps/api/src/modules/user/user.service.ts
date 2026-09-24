@@ -9,6 +9,7 @@ import { UserEntity } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
+import { UserMenuPermissions } from '@quality-services/types';
 
 @Injectable()
 export class UserService {
@@ -16,6 +17,127 @@ export class UserService {
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
   ) {}
+
+  /**
+   * Static method to validate whether a role can see a specific menu option.
+   * Rules:
+   * - specialist: just 'Dashboard' and 'Replies'
+   * - team_lead: just 'Dashboard' and 'Replies'
+   * - admin: all ('Dashboard', 'Replies', 'Evaluations', 'Admin', 'Users', 'Brands')
+   */
+  public static validateMenuAccessByRole(role: string, menuName: string): boolean {
+    const permissions = UserService.getMenuPermissionsByRole(role);
+    const normalizedMenu = (menuName || '').toLowerCase().trim();
+    return permissions.allowedMenus.some(
+      (m) => m.toLowerCase().trim() === normalizedMenu,
+    );
+  }
+
+  /**
+   * Static method returning granted menu options by user role.
+   * Rules:
+   * - specialist: just 'Dashboard' and 'Replies'
+   * - team_lead: just 'Dashboard' and 'Replies'
+   * - admin: all
+   */
+  public static getMenuPermissionsByRole(role: string): UserMenuPermissions {
+    const normalizedRole = (role || '').toLowerCase().trim();
+
+    if (normalizedRole === 'specialist') {
+      return {
+        role: 'specialist',
+        allowedMenus: ['Dashboard', 'Replies'],
+        items: [
+          {
+            id: 'dashboard',
+            label: 'Dashboard',
+            path: '/dashboard',
+            icon: 'LayoutDashboard',
+          },
+          {
+            id: 'replies',
+            label: 'Replies',
+            path: '/replies',
+            icon: 'MessageSquareReply',
+          },
+        ],
+      };
+    }
+
+    if (normalizedRole === 'team_lead') {
+      return {
+        role: 'team_lead',
+        allowedMenus: ['Dashboard', 'Replies'],
+        items: [
+          {
+            id: 'dashboard',
+            label: 'Dashboard',
+            path: '/dashboard',
+            icon: 'LayoutDashboard',
+          },
+          {
+            id: 'replies',
+            label: 'Replies',
+            path: '/replies',
+            icon: 'MessageSquareReply',
+          },
+        ],
+      };
+    }
+
+    // admin: can see all
+    return {
+      role: normalizedRole || 'admin',
+      allowedMenus: ['Dashboard', 'Admin', 'Users', 'Brands', 'Replies', 'Evaluations'],
+      items: [
+        {
+          id: 'dashboard',
+          label: 'Dashboard',
+          path: '/dashboard',
+          icon: 'LayoutDashboard',
+        },
+        {
+          id: 'admin',
+          label: 'Admin',
+          path: '/admin',
+          icon: 'ShieldCheck',
+          children: [
+            { id: 'users', label: 'Users', path: '/users', icon: 'Users' },
+            { id: 'brands', label: 'Brands', path: '/brands', icon: 'Building2' },
+          ],
+        },
+        {
+          id: 'replies',
+          label: 'Replies',
+          path: '/replies',
+          icon: 'MessageSquareReply',
+        },
+        {
+          id: 'evaluations',
+          label: 'Evaluations',
+          path: '/evaluations',
+          icon: 'ClipboardCheck',
+        },
+      ],
+    };
+  }
+
+  async getMenuPermissions(role?: string, userId?: string): Promise<UserMenuPermissions> {
+    let resolvedRole = role;
+
+    if (!resolvedRole && userId) {
+      try {
+        const user = await this.userRepository.findOne({ where: { id: userId } });
+        if (user) {
+          resolvedRole = user.role;
+        }
+      } catch {
+        // Fallback
+      }
+    }
+
+    return UserService.getMenuPermissionsByRole(resolvedRole || 'specialist');
+  }
 
   async create(dto: CreateUserDto): Promise<UserEntity> {
     const existing = await this.userRepository.findOne({
