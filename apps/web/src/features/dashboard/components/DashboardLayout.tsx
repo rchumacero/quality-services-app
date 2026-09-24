@@ -103,6 +103,7 @@ export const DashboardLayout: React.FC = () => {
 
             {/* Replies Item */}
             <div
+              id="nav-replies"
               onClick={() => navigate('/replies')}
               className={navItemClass(location.pathname === '/replies')}
             >
@@ -110,9 +111,6 @@ export const DashboardLayout: React.FC = () => {
                 <MessageSquareReply className="w-4 h-4" />
                 <span>Replies</span>
               </div>
-              <span className="px-2 py-0.5 rounded-full bg-teal-100 text-teal-800 text-[11px] font-bold">
-                24
-              </span>
             </div>
 
             {/* Evaluations Item */}

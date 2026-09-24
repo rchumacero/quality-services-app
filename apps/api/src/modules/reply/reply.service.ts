@@ -11,8 +11,16 @@ import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
 export class ReplyFilterQueryDto extends PaginationQueryDto {
   @IsOptional()
-  @IsUUID()
+  brandIds?: string | string[];
+
+  @IsOptional()
   brandId?: string;
+
+  @IsOptional()
+  createdBys?: string | string[];
+
+  @IsOptional()
+  createdBy?: string;
 
   @IsOptional()
   @IsUUID()
@@ -28,6 +36,20 @@ export class ReplyService {
   private async setRlsContext(manager: EntityManager, userId?: string): Promise<void> {
     await manager.query(`SET LOCAL ROLE authenticated`);
     await manager.query(`SELECT set_config('app.current_user_id', $1, true)`, [userId || '']);
+  }
+
+  async getCreatedByOptions(userId?: string): Promise<string[]> {
+    return this.dataSource.transaction(async (manager) => {
+      await this.setRlsContext(manager, userId);
+      const results = await manager
+        .getRepository(ReplyEntity)
+        .createQueryBuilder('reply')
+        .select('DISTINCT reply.createdBy', 'createdBy')
+        .where('reply.createdBy IS NOT NULL AND reply.createdBy != \'\'')
+        .getRawMany();
+
+      return results.map((r) => r.createdBy).filter(Boolean);
+    });
   }
 
   async create(dto: CreateReplyDto, userId?: string): Promise<ReplyEntity> {
@@ -57,8 +79,28 @@ export class ReplyService {
     limit: number;
   }> {
     const page = query.page || 1;
-    const limit = query.limit || 20;
+    const limit = query.limit || 50;
     const skip = (page - 1) * limit;
+
+    const parseMultiSelect = (val?: string | string[]): string[] => {
+      if (!val) return [];
+      if (Array.isArray(val)) {
+        return val
+          .flatMap((v) => (typeof v === 'string' ? v.split(',') : []))
+          .map((s) => s.trim())
+          .filter(Boolean);
+      }
+      if (typeof val === 'string') {
+        return val
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean);
+      }
+      return [];
+    };
+
+    const brandIds = parseMultiSelect(query.brandIds || query.brandId);
+    const createdBys = parseMultiSelect(query.createdBys || query.createdBy);
 
     return this.dataSource.transaction(async (manager) => {
       await this.setRlsContext(manager, userId);
@@ -70,8 +112,15 @@ export class ReplyService {
         .leftJoinAndSelect('reply.specialist', 'specialist')
         .leftJoinAndSelect('reply.evaluations', 'evaluations');
 
-      if (query.brandId) {
-        qb.andWhere('reply.brandId = :brandId', { brandId: query.brandId });
+      // Filter: brand (tbrand) - multiselect
+      if (brandIds.length > 0) {
+        qb.andWhere('reply.brandId IN (:...brandIds)', { brandIds });
+      }
+
+      // Filter: created_by (treply.created_by) - multiselect
+      // Notice: qb.andWhere ensures AND between brand and created_by filters in database
+      if (createdBys.length > 0) {
+        qb.andWhere('reply.createdBy IN (:...createdBys)', { createdBys });
       }
 
       if (query.specialistId) {
