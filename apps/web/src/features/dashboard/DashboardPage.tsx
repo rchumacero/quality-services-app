@@ -1,7 +1,5 @@
 import React, { useState, useMemo } from 'react';
 import {
-  Download,
-  Plus,
   CheckSquare,
   MessageSquareReply,
   Building2,
@@ -11,7 +9,6 @@ import {
   ShieldCheck,
   Info,
   X,
-  Lock,
   UserCheck,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -78,132 +75,11 @@ export const DashboardPage: React.FC = () => {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      {/* Top Welcome & RLS Context Banner */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-              Welcome back, {user?.name || 'User'}!
-            </h1>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/60 text-xs font-semibold text-emerald-800">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span>
-                RLS Active •{' '}
-                {user?.role === 'specialist'
-                  ? 'Specialist Policy'
-                  : user?.role === 'team_lead'
-                  ? 'Team Lead Policy'
-                  : 'Administrator Policy'}
-              </span>
-            </div>
-            <span
-              className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                user?.role === 'specialist'
-                  ? 'bg-blue-100 text-blue-800 border border-blue-200'
-                  : user?.role === 'team_lead'
-                  ? 'bg-purple-100 text-purple-800 border border-purple-200'
-                  : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-              }`}
-            >
-              {user?.role === 'specialist'
-                ? 'Specialist (Self Only)'
-                : user?.role === 'team_lead'
-                ? 'Team Lead (Brand Portfolio)'
-                : 'Administrator (Global Scope)'}
-            </span>
-          </div>
-          <p className="text-xs text-slate-500 mt-1 max-w-2xl">
-            Logged in as <strong className="text-slate-700">{user?.email}</strong> • Assigned Brands:{' '}
-            <span className="font-semibold text-blue-600">{assignedBrandsList.join(', ')}</span> • Data isolated by PostgreSQL Row Level Security.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2.5 shrink-0">
-          <button
-            type="button"
-            className="inline-flex items-center gap-2 px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200/90 rounded-xl text-xs font-semibold text-slate-700 shadow-xs transition"
-          >
-            <Download className="w-3.5 h-3.5 text-slate-500" />
-            <span>Export RLS Audit</span>
-          </button>
-
-          <button
-            type="button"
-            className="inline-flex items-center gap-2 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl text-xs font-semibold shadow-xs shadow-blue-500/25 transition cursor-pointer"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>New Reply QA</span>
-          </button>
-        </div>
-      </div>
-
-      {/* RLS Scope Callout Card */}
-      <div
-        className={`p-4 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${
-          user?.role === 'specialist'
-            ? 'bg-blue-50/60 border-blue-200/80 text-blue-950'
-            : user?.role === 'team_lead'
-            ? 'bg-purple-50/60 border-purple-200/80 text-purple-950'
-            : 'bg-emerald-50/60 border-emerald-200/80 text-emerald-950'
-        }`}
-      >
-        <div className="flex items-start gap-3">
-          <div
-            className={`p-2 rounded-xl mt-0.5 shrink-0 ${
-              user?.role === 'specialist'
-                ? 'bg-blue-600 text-white'
-                : user?.role === 'team_lead'
-                ? 'bg-purple-600 text-white'
-                : 'bg-emerald-600 text-white'
-            }`}
-          >
-            <Lock className="w-4 h-4" />
-          </div>
-          <div>
-            <div className="text-xs font-bold flex items-center gap-2">
-              <span>PostgreSQL Row Level Security (RLS) Policy Active:</span>
-              <code className="text-[11px] px-1.5 py-0.2 rounded bg-white/80 border font-mono">
-                treply_select_policy
-              </code>
-            </div>
-            <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">
-              {user?.role === 'specialist' ? (
-                <>
-                  As a <strong>Specialist</strong>, you can <strong>only view records created by yourself</strong> (<code>specialist_id = auth.uid()</code>). You currently see exactly <strong>{totalCount}</strong> replies you drafted for <strong>{assignedBrandsList.join(' & ')}</strong>.
-                </>
-              ) : user?.role === 'team_lead' ? (
-                <>
-                  As a <strong>Team Lead</strong>, you can view records created by yourself <em>plus</em> all replies authored by specialists assigned to your brands (<strong>{assignedBrandsList.join(', ')}</strong>). You currently see <strong>{totalCount}</strong> team replies.
-                </>
-              ) : (
-                <>
-                  As an <strong>Administrator</strong>, you have full global access across all managed brands, operations, replies, and evaluations.
-                </>
-              )}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 shrink-0">
-          <span className="text-[11px] font-semibold text-slate-500">Quick Test Switch:</span>
-          <div className="flex -space-x-1">
-            {testUsers.map((tu) => (
-              <button
-                key={tu.id}
-                type="button"
-                onClick={() => switchUser(tu.email)}
-                title={`Switch to ${tu.name} (${tu.role})`}
-                className={`w-7 h-7 rounded-full text-[11px] font-bold border-2 transition transform hover:scale-110 flex items-center justify-center cursor-pointer ${
-                  user?.email === tu.email
-                    ? 'border-blue-600 bg-blue-600 text-white z-10 shadow-sm'
-                    : 'border-white bg-slate-200 text-slate-700 hover:bg-slate-300'
-                }`}
-              >
-                {tu.name.charAt(0)}
-              </button>
-            ))}
-          </div>
-        </div>
+      {/* Top Welcome */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+          Welcome back, {user?.name || 'User'}!
+        </h1>
       </div>
 
       {/* 4 KPI Summary Cards (Dynamic) */}
