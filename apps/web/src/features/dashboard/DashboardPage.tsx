@@ -1,7 +1,5 @@
 import React, { useState, useMemo } from 'react';
 import {
-  Download,
-  Plus,
   CheckSquare,
   MessageSquareReply,
   Building2,
@@ -78,63 +76,11 @@ export const DashboardPage: React.FC = () => {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      {/* Top Welcome & RLS Context Banner */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-              Welcome back, {user?.name || 'User'}!
-            </h1>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/60 text-xs font-semibold text-emerald-800">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span>
-                RLS Active •{' '}
-                {user?.role === 'specialist'
-                  ? 'Specialist Policy'
-                  : user?.role === 'team_lead'
-                  ? 'Team Lead Policy'
-                  : 'Administrator Policy'}
-              </span>
-            </div>
-            <span
-              className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                user?.role === 'specialist'
-                  ? 'bg-blue-100 text-blue-800 border border-blue-200'
-                  : user?.role === 'team_lead'
-                  ? 'bg-purple-100 text-purple-800 border border-purple-200'
-                  : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-              }`}
-            >
-              {user?.role === 'specialist'
-                ? 'Specialist (Self Only)'
-                : user?.role === 'team_lead'
-                ? 'Team Lead (Brand Portfolio)'
-                : 'Administrator (Global Scope)'}
-            </span>
-          </div>
-          <p className="text-xs text-slate-500 mt-1 max-w-2xl">
-            Logged in as <strong className="text-slate-700">{user?.email}</strong> • Assigned Brands:{' '}
-            <span className="font-semibold text-blue-600">{assignedBrandsList.join(', ')}</span> • Data isolated by PostgreSQL Row Level Security.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2.5 shrink-0">
-          <button
-            type="button"
-            className="inline-flex items-center gap-2 px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200/90 rounded-xl text-xs font-semibold text-slate-700 shadow-xs transition"
-          >
-            <Download className="w-3.5 h-3.5 text-slate-500" />
-            <span>Export RLS Audit</span>
-          </button>
-
-          <button
-            type="button"
-            className="inline-flex items-center gap-2 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl text-xs font-semibold shadow-xs shadow-blue-500/25 transition cursor-pointer"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>New Reply QA</span>
-          </button>
-        </div>
+      {/* Top Welcome */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+          Welcome back, {user?.name || 'User'}!
+        </h1>
       </div>
 
       {/* RLS Scope Callout Card */}
