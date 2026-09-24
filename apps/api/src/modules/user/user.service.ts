@@ -22,7 +22,7 @@ export class UserService {
    * Static method to validate whether a role can see a specific menu option.
    * Rules:
    * - specialist: just 'Dashboard' and 'Replies'
-   * - team_lead: just 'Dashboard' and 'Replies'
+   * - team_lead: just 'Dashboard' and 'Evaluations'
    * - admin: all ('Dashboard', 'Replies', 'Evaluations', 'Admin', 'Users', 'Brands')
    */
   public static validateMenuAccessByRole(role: string, menuName: string): boolean {
@@ -37,7 +37,7 @@ export class UserService {
    * Static method returning granted menu options by user role.
    * Rules:
    * - specialist: just 'Dashboard' and 'Replies'
-   * - team_lead: just 'Dashboard' and 'Replies'
+   * - team_lead: just 'Dashboard' and 'Evaluations'
    * - admin: all
    */
   public static getMenuPermissionsByRole(role: string): UserMenuPermissions {
@@ -67,7 +67,7 @@ export class UserService {
     if (normalizedRole === 'team_lead') {
       return {
         role: 'team_lead',
-        allowedMenus: ['Dashboard', 'Replies'],
+        allowedMenus: ['Dashboard', 'Evaluations'],
         items: [
           {
             id: 'dashboard',
@@ -76,10 +76,10 @@ export class UserService {
             icon: 'LayoutDashboard',
           },
           {
-            id: 'replies',
-            label: 'Replies',
-            path: '/replies',
-            icon: 'MessageSquareReply',
+            id: 'evaluations',
+            label: 'Evaluations',
+            path: '/evaluations',
+            icon: 'ClipboardCheck',
           },
         ],
       };

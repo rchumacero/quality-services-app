@@ -51,13 +51,23 @@ export const TEST_USERS: UserProfile[] = [
 
 export const getFallbackPermissions = (role: string): UserMenuPermissions => {
   const normalized = (role || '').toLowerCase().trim();
-  if (normalized === 'specialist' || normalized === 'team_lead') {
+  if (normalized === 'specialist') {
     return {
-      role: normalized,
+      role: 'specialist',
       allowedMenus: ['Dashboard', 'Replies'],
       items: [
         { id: 'dashboard', label: 'Dashboard', path: '/dashboard', icon: 'LayoutDashboard' },
         { id: 'replies', label: 'Replies', path: '/replies', icon: 'MessageSquareReply' },
+      ],
+    };
+  }
+  if (normalized === 'team_lead') {
+    return {
+      role: 'team_lead',
+      allowedMenus: ['Dashboard', 'Evaluations'],
+      items: [
+        { id: 'dashboard', label: 'Dashboard', path: '/dashboard', icon: 'LayoutDashboard' },
+        { id: 'evaluations', label: 'Evaluations', path: '/evaluations', icon: 'ClipboardCheck' },
       ],
     };
   }
